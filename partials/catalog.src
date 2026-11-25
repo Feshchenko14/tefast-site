@@ -1,0 +1,66 @@
+{{HEAD:Каталог запчастин Tesla}}
+<body>
+{{SPRITE}}{{HEADER}}
+<main id="main"><div class="wrap">
+<nav class="crumbs" id="crumbs" aria-label="Хлібні крихти"></nav>
+<div class="ph-title"><div><h1 id="h1">Каталог запчастин</h1><p id="cnt-top">Оригінал, аналог і Б/В для Tesla Model 3, Model Y та Model S</p></div>
+<button class="btn btn-l fopen" id="fopen" type="button"><svg class="i"><use href="#filter"/></svg>Фільтри</button></div>
+<div class="catl">
+<aside class="filters" id="filters" aria-label="Фільтри">
+ <div class="fgrp"><h3>Модель</h3><div id="f-model"></div></div>
+ <div class="fgrp"><h3>Розділ</h3><div id="f-cat"></div></div>
+ <div class="fgrp"><h3>Тип деталі</h3><div id="f-type"></div></div>
+ <div class="fgrp"><h3>Ціна, ₴</h3><div class="prng"><label><span style="position:absolute;left:-999px">Від</span><input id="pmin" type="number" min="0" inputmode="numeric" placeholder="від"></label><label><span style="position:absolute;left:-999px">До</span><input id="pmax" type="number" min="0" inputmode="numeric" placeholder="до"></label></div></div>
+ <button class="btn btn-l freset" id="freset" type="button">Скинути фільтри</button>
+ <button class="btn btn-y freset fclose" id="fclose" type="button">Показати результати</button>
+</aside>
+<section aria-label="Товари">
+ <div class="cbar"><span class="cnt" id="cnt">&nbsp;</span><label>Сортування: <select id="sort"><option value="pop">За популярністю</option><option value="asc">Спочатку дешевші</option><option value="desc">Спочатку дорожчі</option><option value="new">Новинки</option></select></label></div>
+ <div class="achips" id="chips"></div>
+ <div class="cgrid3" id="grid"></div>
+ <div class="pager" id="pager"></div>
+</section></div></div></main>
+{{FOOTER}}
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script>
+(()=>{const $=(s)=>document.querySelector(s),PER=12,enc=encodeURIComponent;
+const q=new URLSearchParams(location.search);
+const st={model:new Set,cat:new Set,type:new Set,sub:q.get('sub')||'',min:'',max:'',sort:'pop',page:1};
+if(MODELS.includes(q.get('model')))st.model.add(q.get('model'));if(GROUPS.includes(q.get('grp')))st.cat.add(q.get('grp'));
+const cnt=(f)=>PRODUCTS.filter(f).length;
+function grp(el,key,items,fn){$(el).innerHTML=items.map(v=>`<label class="opt"><input type="checkbox" data-k="${key}" value="${v}"${st[key].has(v)?' checked':''}>${v}<small>${cnt(p=>fn(p,v))}</small></label>`).join('')}
+grp('#f-model','model',MODELS,(p,v)=>p.models.includes(v));
+grp('#f-cat','cat',GROUPS,(p,v)=>p.grp===v);
+grp('#f-type','type',['Оригінал','Аналог','Б/В'],(p,v)=>v==='Б/В'?p.cond==='Б/В':p.type===v&&p.cond!=='Б/В');
+function crumbs(){const m=[...st.model],g=[...st.cat];let h='<a href="index.html">Головна</a><i>/</i>';
+ const tail=[];if(m.length===1)tail.push([`model.html?m=${enc(m[0])}`,'Tesla '+m[0]]);
+ if(g.length===1)tail.push([`catalog.html?${m.length===1?'model='+enc(m[0])+'&':''}grp=${enc(g[0])}`,g[0]]);
+ if(st.sub)tail.push([null,st.sub]);
+ h+=tail.length?`<a href="catalog.html">Каталог</a>`+tail.map((t,i)=>`<i>/</i>${i===tail.length-1?`<span aria-current="page">${t[1]}</span>`:`<a href="${t[0]}">${t[1]}</a>`}`).join(''):'<span aria-current="page">Каталог</span>';
+ $('#crumbs').innerHTML=h;
+ $('#h1').textContent=st.sub?st.sub+(m.length===1?' Tesla '+m[0]:''):(m.length===1&&!g.length?'Запчастини Tesla '+m[0]:'Каталог запчастин')}
+function list(){let r=PRODUCTS.filter(p=>(!st.model.size||p.models.some(m=>st.model.has(m)))&&(!st.cat.size||st.cat.has(p.grp))&&(!st.sub||p.sub===st.sub)&&(!st.type.size||st.type.has(p.cond==='Б/В'?'Б/В':p.type))&&(!st.min||p.price>=+st.min)&&(!st.max||p.price<=+st.max));
+ if(st.sort==='asc')r.sort((a,b)=>a.price-b.price);if(st.sort==='desc')r.sort((a,b)=>b.price-a.price);if(st.sort==='new')r.sort((a,b)=>(b.badge==='NEW')-(a.badge==='NEW'));return r}
+function pages(n,cur){if(n<=7)return Array.from({length:n},(_,i)=>i+1);const s=new Set([1,n,cur,cur-1,cur+1]);const a=[...s].filter(x=>x>=1&&x<=n).sort((a,b)=>a-b),o=[];a.forEach((x,i)=>{if(i&&x-a[i-1]>1)o.push('…');o.push(x)});return o}
+let first=true;
+function render(){const r=list(),np=Math.max(1,Math.ceil(r.length/PER));if(st.page>np)st.page=1;crumbs();
+ const rows=r.slice((st.page-1)*PER,st.page*PER);
+ $('#grid').innerHTML=rows.length?rows.map(cardHTML).join(''):'<div class="empty"><h3>Нічого не знайдено</h3><p>Змініть фільтри або напишіть нам: підберемо деталь за VIN.</p><button class="btn btn-y" type="button" id="e-reset">Скинути фільтри</button></div>';
+ stagger($('#grid'));
+ $('#cnt').textContent='Знайдено: '+r.length+' '+((n,m=n%100,d=n%10)=>m>10&&m<20?'товарів':d===1?'товар':d>1&&d<5?'товари':'товарів')(r.length);
+ $('#pager').innerHTML=np>1?pages(np,st.page).map(x=>x==='…'?'<span class="dots" aria-hidden="true">…</span>':`<button type="button" class="${x===st.page?'on':''}" data-p="${x}" aria-label="Сторінка ${x}"${x===st.page?' aria-current="page"':''}>${x}</button>`).join(''):'';
+ const ch=[...st.model,...st.cat,...(st.sub?[st.sub]:[]),...st.type].map(v=>`<button type="button" data-v="${v}">${v}<svg class="i"><use href="#plus"/></svg></button>`);
+ if(st.min||st.max)ch.push(`<button type="button" data-v="__p">${st.min||0}–${st.max||'∞'} ₴<svg class="i"><use href="#plus"/></svg></button>`);
+ $('#chips').innerHTML=ch.join('');first=false}
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.k){t.checked?st[t.dataset.k].add(t.value):st[t.dataset.k].delete(t.value);if(t.dataset.k==='cat')st.sub='';st.page=1;render()}if(t.id==='sort'){st.sort=t.value;st.page=1;render()}});
+['pmin','pmax'].forEach(id=>$('#'+id).addEventListener('input',e=>{st[id==='pmin'?'min':'max']=e.target.value;st.page=1;render()}));
+function reset(){['model','cat','type'].forEach(k=>st[k].clear());st.sub='';st.min=st.max='';$('#pmin').value=$('#pmax').value='';document.querySelectorAll('.filters input[type=checkbox]').forEach(c=>c.checked=false);st.page=1;render()}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.id==='freset'||t.id==='e-reset')reset();
+ if(t.dataset.p){st.page=+t.dataset.p;render();scrollTo({top:120,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
+ if(t.dataset.v){const v=t.dataset.v;if(v==='__p'){st.min=st.max='';$('#pmin').value=$('#pmax').value=''}else{if(v===st.sub)st.sub='';['model','cat','type'].forEach(k=>st[k].delete(v));document.querySelectorAll('.filters input[type=checkbox]').forEach(c=>{if(c.value===v)c.checked=false})}st.page=1;render()}
+ if(t.id==='fopen')$('#filters').classList.add('open');if(t.id==='fclose')$('#filters').classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#filters').classList.remove('open')});
+render();})();
+</script>
+</body></html>

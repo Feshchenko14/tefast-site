@@ -1,0 +1,101 @@
+/* ===== Рух (design-motion-principles): Jakub — основа, Emil — швидкість, Jhey — лише вітрина ===== */
+:root{
+ --ease:cubic-bezier(.22,1,.36,1);        /* вхід і стани: швидкий старт, м'яка зупинка */
+ --ease-in:cubic-bezier(.4,0,1,1);        /* вихід */
+ --ease-io:cubic-bezier(.65,0,.35,1);     /* зміна стану на місці */
+ --d-press:100ms;--d-fast:160ms;--d:220ms;--d-slow:340ms}
+
+/* Міжсторінковий перехід: коротке перетікання, шапка стоїть на місці */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vt-out 120ms var(--ease-in) both}
+::view-transition-new(root){animation:vt-in 220ms var(--ease) both}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0;transform:translateY(6px)}}
+header.nav{view-transition-name:site-header}
+::view-transition-group(site-header){animation-duration:0s}
+
+/* Вхід: прозорість + зсув + розмиття. Вихід тихіший за вхід. */
+@keyframes up{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.slide.on .sl-t>*{animation:up 520ms var(--ease) both}
+.slide.on .sl-t>*:nth-child(2){animation-delay:60ms}.slide.on .sl-t>*:nth-child(3){animation-delay:120ms}.slide.on .sl-t>*:nth-child(4){animation-delay:180ms}
+@keyframes chip{from{opacity:0;transform:translateY(8px) scale(.96);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+.slide.on .chip{animation:chip 480ms var(--ease) 260ms both}
+.slide{transition:opacity 520ms var(--ease-io)}
+.slide:not(.on){transition-duration:360ms}
+
+/* Картки каталогу з'являються каскадом (лише після зміни фільтрів і при вході на сторінку) */
+@keyframes cardin{from{opacity:0;transform:translateY(8px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+.cgrid3 .card.enter,#hg .card.enter{animation:cardin 260ms var(--ease) both;animation-delay:calc(min(var(--i,0),8)*28ms)}
+.pager button,.achips button{transition:background var(--d-fast) var(--ease),border-color var(--d-fast) var(--ease),transform var(--d-press) var(--ease)}
+.pager button:active,.achips button:active{transform:scale(.96)}
+@keyframes chipin{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.achips button{animation:chipin var(--d) var(--ease) both}
+
+/* Натискання: однакова реакція всіх кнопок */
+.btn,.ic,.cb,.pr button,.qty button,.mt,.tabs button,.ah,.msw a,.al a{transition-timing-function:var(--ease)}
+.ic:active,.cb:active,.qty button:active,.tabs button:active{transform:scale(.96)}
+.btn,.pr button{transition-duration:var(--d-fast)}
+.btn:active,.pr button:active{transition-duration:var(--d-press)}
+
+/* Додавання в кошик: іконка «плюс → галочка» + «поштовх» бейджа */
+@keyframes swap{from{opacity:0;transform:scale(.6);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.add.done svg{animation:swap 200ms var(--ease) both}
+.add.done{background:var(--y)!important;color:var(--ink)!important}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.cart i.bump{animation:bump 260ms var(--ease)}
+
+/* Тост: вхід з розмиттям, вихід тихіший */
+#toast{filter:blur(3px);transition:opacity var(--d-fast) var(--ease-in),transform var(--d-fast) var(--ease-in),filter var(--d-fast) var(--ease-in)}
+#toast.on{filter:none;transition:opacity var(--d) var(--ease),transform var(--d) var(--ease),filter var(--d) var(--ease)}
+
+/* Шторка фільтрів: вихід швидший за вхід */
+.filters{transition:transform var(--d) var(--ease-in),box-shadow var(--d) var(--ease-in)}
+.filters.open{transition:transform var(--d-slow) var(--ease),box-shadow var(--d-slow) var(--ease)}
+
+/* Шапка: тінь з'являється, коли сторінка прокручена */
+header.nav{transition:box-shadow var(--d) var(--ease),background var(--d) var(--ease)}
+header.nav.scrolled{box-shadow:0 12px 28px -22px rgba(41,40,45,.55)}
+
+/* Вкладки: індикатор ковзає між пунктами */
+.tabs{position:relative}
+.tabs>button{position:relative;z-index:1}
+.tab-ind{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:12px;background:var(--ink);z-index:0;pointer-events:none;will-change:transform,width}
+.tabs.ready .tab-ind{transition:transform var(--d) var(--ease),width var(--d) var(--ease)}
+.tabs.has-ind>button.on{background:none}
+.tabs>button{transition:color var(--d-fast) var(--ease)}
+/* панелі вкладок */
+@keyframes panel{from{opacity:0;transform:translateY(6px);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+.tp.on{animation:panel var(--d) var(--ease) both}
+
+/* Галерея товару: зміна кадру без «стрибка» */
+.gmain img{transition:opacity var(--d-fast) var(--ease),filter var(--d-fast) var(--ease)}
+.gmain img.sw{opacity:.35;filter:blur(3px)}
+
+/* Дерево розділів: розкриття + каскад пунктів; закриття швидше */
+.ap{transition:grid-template-rows var(--d) var(--ease-in)}
+.ag.open .ap{transition:grid-template-rows var(--d-slow) var(--ease)}
+.api{transition:visibility 0s linear var(--d)}.ag.open .api{transition-delay:0s}
+.al a{opacity:0;transform:translateY(6px);transition:opacity 120ms var(--ease-in),transform 120ms var(--ease-in),background var(--d-fast) var(--ease),color var(--d-fast) var(--ease)}
+.ag.open .al a{opacity:1;transform:none;transition:opacity var(--d) var(--ease) calc(60ms + min(var(--i,0),10)*22ms),transform var(--d) var(--ease) calc(60ms + min(var(--i,0),10)*22ms),background var(--d-fast) var(--ease),color var(--d-fast) var(--ease)}
+.ah .chev{transition:transform var(--d) var(--ease)}.ag.open .ah .chev{transform:rotate(180deg)}
+.ag{transition:border-color var(--d-fast) var(--ease)}
+.ai{transition:background var(--d-fast) var(--ease)}
+
+/* FAQ: тонка поява відповіді */
+.faq details[open] p{animation:panel var(--d) var(--ease) both}
+
+/* Корзина: рядок згасає перед видаленням */
+.it{transition:opacity var(--d-fast) var(--ease-in),transform var(--d-fast) var(--ease-in)}
+.it.out{opacity:0;transform:translateX(-10px)}
+@keyframes rowin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.items .it{animation:rowin var(--d) var(--ease) both;animation-delay:calc(var(--i,0)*35ms)}
+.done{animation:up 480ms var(--ease) both}
+.done .ok{animation:swap 420ms var(--ease) 120ms both}
+
+/* Жорсткі межі: тільки transform/opacity/filter, окрім розкриття дерева (змінює потік сторінки) */
+
+/* Доступність: без руху — одразу кінцевий стан */
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0ms!important;transition-duration:.01ms!important;transition-delay:0ms!important;scroll-behavior:auto!important}
+ @view-transition{navigation:none}
+}

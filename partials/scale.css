@@ -1,0 +1,18 @@
+/* ===== Компактний масштаб: читабельно на MacBook Air 13" (1280–1470px) ===== */
+:root{--wrap:1160px}
+body{font-size:15px;line-height:1.55}
+.wrap{padding:0 24px}
+.util .wrap{min-height:34px}
+header.nav .wrap{min-height:60px;gap:20px}
+.logo img{height:40px}
+section.s{padding:72px 0}
+.sh{margin-bottom:32px}
+h2{font-size:clamp(26px,2.7vw,34px)}
+.hbox{min-height:550px}
+.slide h1{font-size:clamp(30px,3.3vw,44px)}
+.sl-t{padding-bottom:150px}
+.slide p{font-size:16px}
+.ctl{bottom:56px}
+.search{margin-top:-36px}
+.sbox h2{font-size:clamp(22px,2.2vw,28px)}
+.mhead h2{font-size:clamp(22px,2.4vw,30px)}

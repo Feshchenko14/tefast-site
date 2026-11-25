@@ -1,0 +1,47 @@
+{{HEAD:Товар}}
+<body>
+{{SPRITE}}{{HEADER}}
+<main id="main"><div class="wrap" id="root"></div></main>
+{{FOOTER}}
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script>
+(()=>{const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const id=new URLSearchParams(location.search).get('id');const p=byId(id)||PRODUCTS[0];
+document.title=p.name+' — '+p.pn+' | TEFAST';
+const gal=[p.img,...PRODUCTS.filter(x=>x.id!==p.id).slice(2,5).map(x=>x.img)];
+const rel=PRODUCTS.filter(x=>x.id!==p.id&&(x.sub===p.sub||x.grp===p.grp)).slice(0,4);
+const save=p.old?Math.round((1-p.price/p.old)*100):0;
+$('#root').innerHTML=`
+<nav class="crumbs" aria-label="Хлібні крихти"><a href="index.html">Головна</a><i>/</i><a href="catalog.html">Каталог</a><i>/</i><a href="model.html?m=${encodeURIComponent(p.models[0])}">Tesla ${p.models[0]}</a><i>/</i><a href="catalog.html?model=${encodeURIComponent(p.models[0])}&grp=${encodeURIComponent(p.grp)}">${p.grp}</a><i>/</i><a href="catalog.html?model=${encodeURIComponent(p.models[0])}&grp=${encodeURIComponent(p.grp)}&sub=${encodeURIComponent(p.sub)}">${p.sub}</a><i>/</i><span aria-current="page">${p.name}</span></nav>
+<div class="pd">
+ <div class="gal"><div class="gmain">${p.badge?`<span class="badge">${p.badge}</span>`:''}<img id="gm" src="${gal[0]}" alt="${p.name}"></div>
+  <div class="gth">${gal.map((g,i)=>`<button type="button" class="${i?'':'on'}" data-i="${i}" aria-label="Фото ${i+1}"><img src="${g}" alt=""></button>`).join('')}</div></div>
+ <div class="pinfo pi2">
+  <span class="pn2">Артикул: <b>${p.pn}</b></span>
+  <h1>${p.name}</h1>
+  <div class="tags"><span>${p.type}</span><span>${p.cond}</span><span>${p.sub}</span></div>
+  <span class="stock">В наявності · ${p.stock} шт. на складі</span>
+  <div class="price"><b>${money(p.price)}</b>${p.old?`<s>${money(p.old)}</s><span class="save">−${save}%</span>`:''}</div>
+  <div class="vin"><h3>Перевірте сумісність за VIN</h3><form id="vf"><label style="position:absolute;left:-999px" for="vin">VIN</label><input id="vin" maxlength="17" placeholder="17 символів VIN" autocomplete="off"><button class="btn btn-d" type="submit">Перевірити</button></form><div class="vres" id="vres" role="status"></div></div>
+  <div class="buy"><div class="qty"><button type="button" id="qm" aria-label="Менше"><svg class="i"><use href="#minus"/></svg></button><input id="qv" value="1" inputmode="numeric" aria-label="Кількість"><button type="button" id="qp" aria-label="Більше"><svg class="i"><use href="#plus"/></svg></button></div>
+   <button class="btn btn-y" id="addb" type="button"><svg class="i"><use href="#cart"/></svg><span>Додати в кошик</span></button></div>
+  <ul class="mini"><li><svg class="i"><use href="#truck"/></svg><span>Відправка сьогодні<small>Нова пошта або Delivery. Безкоштовно від 3 000 ₴</small></span></li><li><svg class="i"><use href="#shield"/></svg><span>Гарантія 12 місяців<small>Повернення протягом 30 днів, якщо не підійшло</small></span></li><li><svg class="i"><use href="#pin"/></svg><span>Фото чи відео деталі<small>Надішлемо в месенджер за вашим запитом</small></span></li></ul>
+ </div></div>
+<div class="ptabs"><div class="tabs" role="tablist" aria-label="Інформація про товар"><button type="button" class="on" data-t="t1">Опис</button><button type="button" data-t="t2">Характеристики</button><button type="button" data-t="t3">Сумісність</button><button type="button" data-t="t4">Доставка і гарантія</button></div>
+ <div class="tp on" id="t1"><p>${p.desc}</p></div>
+ <div class="tp" id="t2"><table class="spec"><tr><th>Артикул</th><td>${p.pn}</td></tr><tr><th>Тип</th><td>${p.type}</td></tr><tr><th>Стан</th><td>${p.cond}</td></tr><tr><th>Розділ</th><td>${p.grp}</td></tr><tr><th>Підкатегорія</th><td>${p.sub}</td></tr><tr><th>Сторона</th><td>${p.side}</td></tr><tr><th>Вага</th><td>${p.w}</td></tr></table></div>
+ <div class="tp" id="t3"><div class="compat">${MODELS.map(m=>`<span class="${p.models.includes(m)?'y':''}">${m}${p.models.includes(m)?' ✓':''}</span>`).join('')}</div><p style="margin-top:20px">Підсвічені моделі сумісні. Для точності введіть VIN у блоці вище.</p></div>
+ <div class="tp" id="t4"><p>Відправляємо в день замовлення Новою поштою або Delivery. Від 3 000 ₴ доставка безкоштовна. Гарантія на нові деталі 12 місяців, повернення протягом 30 днів у незмінному вигляді. Б/В деталі мають гарантію 30 днів.</p></div></div>
+<section class="rel" aria-label="Схожі товари" style="padding-bottom:112px"><div class="sh"><h2>З цим купують</h2><a class="more" href="catalog.html">Весь каталог<svg class="i"><use href="#arrow"/></svg></a></div><div class="grid4">${rel.map(cardHTML).join('')}</div></section>
+<div class="sbar"><b>${money(p.price)}</b><button class="btn btn-y add" data-id="${p.id}" type="button">В кошик</button></div>`;
+$$('.gth button').forEach(b=>b.onclick=()=>{const g=$('#gm'),src=gal[+b.dataset.i];$$('.gth button').forEach(x=>x.classList.toggle('on',x===b));if(g.src===src)return;g.classList.add('sw');const im=new Image();im.onload=im.onerror=()=>{g.src=src;requestAnimationFrame(()=>g.classList.remove('sw'))};im.src=src});
+const qv=$('#qv'),clamp=v=>Math.max(1,Math.min(p.stock,+v||1));
+$('#qm').onclick=()=>qv.value=clamp(+qv.value-1);$('#qp').onclick=()=>qv.value=clamp(+qv.value+1);qv.onchange=()=>qv.value=clamp(qv.value);
+$('#addb').onclick=function(){cart.add(p.id,clamp(qv.value));const b=this,u=b.querySelector('use'),l=b.querySelector('span');u.setAttribute('href','#check');l.textContent='Додано';b.classList.remove('done');void b.offsetWidth;b.classList.add('done');clearTimeout(b._t);b._t=setTimeout(()=>{u.setAttribute('href','#cart');l.textContent='Додати в кошик';b.classList.remove('done')},1400)};
+$('#vf').onsubmit=e=>{e.preventDefault();const v=$('#vin').value.trim().toUpperCase(),r=$('#vres');
+ if(v.length!==17||/[IOQ]/.test(v)){r.className='vres no';r.textContent='VIN має містити 17 символів без літер I, O, Q.';return}
+ r.className='vres ok';r.textContent='Приклад перевірки: для цього VIN деталь підходить. У робочій версії тут буде реальний декодер.'};
+initTabs();$$('.ptabs .tabs button').forEach(b=>b.onclick=()=>{initTabs();$$('.ptabs .tabs button').forEach(x=>x.classList.toggle('on',x===b));$$('.tp').forEach(t=>t.classList.toggle('on',t.id===b.dataset.t))});
+})();
+</script>
+</body></html>

@@ -1,0 +1,49 @@
+{{HEAD:Запчастини за моделлю}}
+<body>
+{{SPRITE}}{{HEADER}}
+<main id="main"><div class="wrap" id="root"></div></main>
+{{FOOTER}}
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script>
+(()=>{const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const q=new URLSearchParams(location.search);let m=q.get('m');if(!MODELS.includes(m))m=MODELS[0];
+const info=MODEL_INFO[m],enc=encodeURIComponent;
+document.title='Запчастини '+'Tesla '+m+' | TEFAST';
+const pl=(n,a,b,c)=>{const m=n%100,d=n%10;return m>10&&m<20?c:d===1?a:d>1&&d<5?b:c};const total=PRODUCTS.filter(p=>p.models.includes(m)).length,subs=TREE.reduce((n,t)=>n+t.s.length,0);
+const L=(g,s)=>`catalog.html?model=${enc(m)}&grp=${enc(g)}${s?'&sub='+enc(s):''}`;
+const cnt=(g,s)=>PRODUCTS.filter(p=>p.models.includes(m)&&p.grp===g&&(!s||p.sub===s)).length;
+$('#root').innerHTML=`
+<nav class="crumbs" aria-label="Хлібні крихти"><a href="index.html">Головна</a><i>/</i><a href="catalog.html">Каталог</a><i>/</i><span aria-current="page">Tesla ${m}</span></nav>
+<div class="mpage">
+ <aside class="mside" aria-label="Модель">
+  <div class="mcard"><div class="mimg"><img src="${info.img}" alt="Tesla ${m}"></div>
+   <div class="mbody"><h1>Tesla ${m}</h1><p class="myrs">${info.years}</p>
+    <ul class="mst"><li><b>${TREE.length}</b><span>розділів</span></li><li><b>${subs}</b><span>підкатегорій</span></li><li><b>${total}</b><span>товарів</span></li></ul>
+    <a class="btn btn-d" href="catalog.html?model=${enc(m)}" style="width:100%">Усі запчастини<svg class="i"><use href="#arrow"/></svg></a></div></div>
+  <div class="msw" role="group" aria-label="Інша модель"><span>Інша модель</span>${MODELS.filter(x=>x!==m).map(x=>`<a href="model.html?m=${enc(x)}">${x}<small>${MODEL_INFO[x].years}</small><svg class="i"><use href="#arrow"/></svg></a>`).join('')}</div>
+ </aside>
+ <section class="mtree" aria-label="Розділи запчастин">
+  <div class="mhead"><div><div class="eyebrow">Розділи</div><h2>Що потрібно для ${m}?</h2></div>
+   <button class="btn btn-l" id="tgl" type="button">Розгорнути все</button></div>
+  <label class="field tsearch"><svg class="i"><use href="#search"/></svg><span style="position:absolute;left:-999px">Пошук розділу</span><input id="ts" type="search" placeholder="Знайти розділ: наприклад, бампер або колодки" autocomplete="off"></label>
+  <div class="acc" id="acc">${TREE.map((t,i)=>`<div class="ag" data-g="${t.g}">
+   <h3><button class="ah" type="button" aria-expanded="false" aria-controls="ap${i}"><span class="ai"><svg class="i" viewBox="0 0 24 24">${GICON[t.g]||''}</svg></span><span class="at"><b>${t.g}</b><small>${t.s.length} ${pl(t.s.length,'підкатегорія','підкатегорії','підкатегорій')} · ${cnt(t.g)} ${pl(cnt(t.g),'товар','товари','товарів')}</small></span><svg class="i chev"><use href="#down"/></svg></button></h3>
+   <div class="ap" id="ap${i}"><div class="api"><div class="al">
+    <a class="all" href="${L(t.g)}" style="--i:0">Усі деталі розділу<svg class="i"><use href="#arrow"/></svg></a>
+    ${t.s.map((s,j)=>`<a href="${L(t.g,s)}" style="--i:${j+1}" data-s="${s.toLowerCase()}"><span>${s}</span><small>${cnt(t.g,s)}</small></a>`).join('')}
+   </div></div></div></div>`).join('')}</div>
+  <div class="tnone" id="tn" hidden><b>Нічого не знайдено</b><span>Спробуйте інше слово або відкрийте весь каталог моделі.</span></div>
+ </section></div>`;
+const gs=$$('.ag');
+function set(g,open){const b=g.querySelector('.ah');g.classList.toggle('open',open);b.setAttribute('aria-expanded',open)}
+gs.forEach(g=>g.querySelector('.ah').onclick=()=>set(g,!g.classList.contains('open')));
+set(gs[0],true);
+let all=false;$('#tgl').onclick=()=>{all=!all;gs.filter(g=>!g.hidden).forEach(g=>set(g,all));$('#tgl').textContent=all?'Згорнути все':'Розгорнути все'};
+$('#ts').addEventListener('input',e=>{const v=e.target.value.trim().toLowerCase();let any=false;
+ gs.forEach(g=>{const hit=!v||g.dataset.g.toLowerCase().includes(v);let n=0;
+  g.querySelectorAll('.al a[data-s]').forEach(a=>{const ok=!v||hit||a.dataset.s.includes(v);a.hidden=!ok;if(ok)n++});
+  g.hidden=!(hit||n);if(!g.hidden){any=true;if(v)set(g,true)}});
+ $('#tn').hidden=any});
+})();
+</script>
+</body></html>

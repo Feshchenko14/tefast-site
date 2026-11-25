@@ -1,0 +1,4 @@
+.DS_Store
+patch*.py
+index-v*.html
+__pycache__/
