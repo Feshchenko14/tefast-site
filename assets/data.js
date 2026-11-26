@@ -4,7 +4,7 @@ window.MODELS=['Model 3','Model Y','Model S'];
 window.MODEL_INFO={
  'Model 3':{years:'2018–2023',slug:'model-3',img:'img/model-3.jpg'},
  'Model Y':{years:'2020–2024',slug:'model-y',img:'img/model-y.jpg'},
- 'Model S':{years:'2012–2016',slug:'model-s',img:W('b/b6/2021_Tesla_Model_S_P2_Long_Range_front_right_view.jpg')}};
+ 'Model S':{years:'2012–2016',slug:'model-s',img:'img/model-s.jpg'}};
 window.GROUPS=TREE.map(t=>t.g);
 /* іконки розділів (24×24, stroke) */
 window.GICON={
