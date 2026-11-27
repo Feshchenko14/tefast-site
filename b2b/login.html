@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Вхід для СТО — TEFAST B2B</title>
+<meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+</head>
+<body>
+<div class="auth">
+ <section class="l" aria-label="Про програму">
+  <a href="../index.html" aria-label="На сайт"><img src="../logo.png" alt="TEFAST"></a>
+  <div><h1>Кабінет для <mark>СТО</mark> і сервісів Tesla</h1><p style="color:#c9c9ce;margin-top:12px;max-width:46ch">Оптові ціни, відстрочка платежу та швидке замовлення за артикулами. Реєстрація займає пару хвилин.</p></div>
+  <ul>
+   <li><svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Індивідуальні ціни: знижка у % від роздрібної або фіксована</li>
+   <li><svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Відстрочка платежу та кредитний ліміт</li>
+   <li><svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Швидке замовлення списком артикулів</li>
+   <li><svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Рахунок і накладна в PDF в один клік</li>
+   <li><svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Каталог по моделях і розділах, як на сайті</li>
+  </ul>
+ </section>
+ <section class="r"><div class="box" id="box"></div></section>
+</div>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,$$,me,login,register,db,save,reset,stBadge,toast,fd}=B2B,box=$('#box');
+const CHK='<svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';
+const field=(id,label,attrs='',hint='')=>`<label class="fl" for="${id}">${label}<input id="${id}" name="${id}" ${attrs}>${hint?`<small>${hint}</small>`:''}<span class="err" data-e="${id}"></span></label>`;
+function forms(tab){
+ box.innerHTML=`<div><h2>Кабінет СТО</h2><p style="color:var(--mut)">Для партнерів TEFAST</p></div>
+ <div class="seg" id="tabs" role="tablist"><button data-v="in" class="${tab==='in'?'on':''}" role="tab">Вхід</button><button data-v="reg" class="${tab==='reg'?'on':''}" role="tab">Реєстрація СТО</button></div>
+ <form id="fin" class="${tab==='in'?'':'hide'}" novalidate style="display:grid;gap:12px">
+  ${field('e','Email','type="email" autocomplete="username" placeholder="sto@example.com"')}${field('p','Пароль','type="password" autocomplete="current-password"')}
+  <span class="err" id="lerr" style="color:var(--bad);font-weight:500"></span>
+  <button class="btn btn-y" type="submit" style="min-height:44px">Увійти</button>
+  <div class="demo"><b style="color:var(--ink)">Демо-акаунти (пароль demo1234)</b>
+   <button type="button" data-d="sto@demo.example">${CHK.replace('<svg','<svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px"')}Верифікований: <code>sto@demo.example</code></button>
+   <button type="button" data-d="new@demo.example">Новий (очікує перевірки): <code>new@demo.example</code></button>
+   <button type="button" data-d="stop@demo.example">Призупинений: <code>stop@demo.example</code></button></div></form>
+ <form id="freg" class="${tab==='reg'?'':'hide'}" novalidate style="display:grid;gap:12px">
+  ${field('n','Назва СТО','autocomplete="organization" placeholder="СТО «Назва»"')}
+  <div class="g2">${field('d','ЄДРПОУ / ІПН','inputmode="numeric" maxlength="10" placeholder="8–10 цифр"')}${field('po','Кількість постів','type="number" min="1" max="99" value="2"')}</div>
+  <div class="g2">${field('c','Контактна особа','autocomplete="name"')}${field('t','Телефон','type="tel" autocomplete="tel" placeholder="+380"')}</div>
+  ${field('re','Email','type="email" autocomplete="email"')}
+  <div class="g2">${field('ci','Місто','autocomplete="address-level2"')}${field('ad','Адреса','autocomplete="street-address"','Вулиця та район')}</div>
+  ${field('rp','Пароль','type="password" autocomplete="new-password"','Не менше 8 символів')}
+  <label class="opt" style="align-items:center"><input type="checkbox" id="ag"><span>Погоджуюсь з умовами співпраці й обробкою даних <span class="err" data-e="ag"></span></span></label>
+  <div class="note info" id="vm"></div>
+  <button class="btn btn-y" type="submit" style="min-height:44px">Подати заявку</button></form>
+ <button class="btn btn-l btn-s" id="rs" type="button" style="justify-self:start">Скинути демо-дані</button>`;
+ const tabs=$('#tabs');B2B.seg(tabs,v=>{$('#fin').classList.toggle('hide',v!=='in');$('#freg').classList.toggle('hide',v!=='reg');history.replaceState(null,'',v==='reg'?'#register':'#')});
+ $('#vm').textContent=db().settings.verifyMode==='auto'?'Автоматична верифікація: якщо ЄДРПОУ складається з 8 цифр, доступ відкриється одразу (в демо перевірка за реєстром імітується).':'Ручна верифікація: менеджер перевірить заявку, зазвичай протягом робочого дня.';
+ $('#fin').onsubmit=e=>{e.preventDefault();const r=login($('#e').value,$('#p').value);if(r.err){$('#lerr').textContent=r.err;return}route(r.acc)};
+ $$('[data-d]').forEach(b=>b.onclick=()=>{$('#e').value=b.dataset.d;$('#p').value='demo1234';$('#fin').requestSubmit()});
+ $('#rs').onclick=()=>{reset();toast('Демо-дані скинуто');forms('in')};
+ $('#freg').onsubmit=e=>{e.preventDefault();$$('.err[data-e]').forEach(x=>x.textContent='');$$('#freg input').forEach(x=>x.classList.remove('bad'));const v=k=>$('#'+k).value.trim(),er={};
+  if(v('n').length<3)er.n='Вкажіть назву';if(!/^\d{8,10}$/.test(v('d')))er.d='8–10 цифр';if(v('c').length<2)er.c='Вкажіть контактну особу';if(v('t').replace(/\D/g,'').length<10)er.t='Вкажіть телефон';
+  if(!/^\S+@\S+\.\S+$/.test(v('re')))er.re='Некоректний email';if(v('ci').length<2)er.ci='Вкажіть місто';if($('#rp').value.length<8)er.rp='Мінімум 8 символів';if(!$('#ag').checked)er.ag='Потрібна згода';
+  const ks=Object.keys(er);if(ks.length){ks.forEach(k=>{$(`[data-e="${k}"]`).textContent=er[k];const i=$('#'+k);i&&i.classList.add('bad')});$('#'+ks[0]).focus();return}
+  const r=register({name:v('n'),edrpou:v('d'),posts:v('po'),contact:v('c'),phone:v('t'),email:v('re'),city:v('ci'),address:v('ad'),pass:$('#rp').value});
+  if(r.err){$('[data-e="re"]').textContent=r.err;return}route(r.acc,true)};
+}
+function route(a,fresh){
+ if(a.status==='verified'){if(fresh)toast('Акаунт верифіковано автоматично');location.href='index.html';return}
+ if(a.status==='new'){box.innerHTML=`<div class="state"><div class="big"><svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+  <h2>Заявку прийнято</h2><p style="color:var(--mut)">${a.name}<br>Статус: ${stBadge('new')}</p>
+  <p style="max-width:38ch">Менеджер перевірить дані (ЄДРПОУ ${a.edrpou}) і відкриє доступ. Ми напишемо на ${a.email}.</p>
+  <div class="note info" style="text-align:left"><span><b>Демо:</b> щоб побачити кабінет, натисніть кнопку нижче. Вона імітує дію менеджера «Верифікувати».</span></div>
+  <button class="btn btn-y" id="sim" type="button">Імітувати верифікацію менеджером</button><button class="btn btn-l btn-s" id="bk" type="button">Вийти</button></div>`;
+  $('#sim').onclick=()=>{a.status='verified';save();location.href='index.html'};$('#bk').onclick=()=>{B2B.logout();forms('in')}}
+ else{box.innerHTML=`<div class="state bad"><div class="big"><svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg></div>
+  <h2>Доступ призупинено</h2><p style="color:var(--mut)">${a.name}<br>Статус: ${stBadge('suspended')}</p>
+  ${a.reason?`<div class="note bad" style="text-align:left">${a.reason}</div>`:''}<p style="max-width:38ch">Зверніться до свого менеджера, щоб відновити доступ.</p>
+  <button class="btn btn-l" id="bk" type="button">Вийти</button></div>`;$('#bk').onclick=()=>{B2B.logout();forms('in')}}}
+const a=me();if(a&&a.status!=='verified')route(a);else if(a){location.replace('index.html')}else forms(location.hash==='#register'?'reg':'in');
+})();
+</script>
+</body></html>

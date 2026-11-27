@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Швидке замовлення — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,$$,money,price,cart,toast,norm,byId}=B2B;
+const acc=B2B.shell({active:'quick',title:'Швидке замовлення',sub:'Список артикулів і кількостей'});if(!acc)return;
+$('#view').innerHTML=`<div class="row2" style="grid-template-columns:1fr 1.5fr;align-items:start">
+ <div class="card" style="display:grid;gap:12px"><h2 style="margin:0">Вставте список</h2>
+  <p style="color:var(--mut)">По одному рядку: <b>артикул</b> і <b>кількість</b> через пробіл, кому, крапку з комою або табуляцію. Без кількості береться 1.</p>
+  <label class="fl"><span class="sr">Список артикулів</span><textarea id="ta" placeholder="1007-31-B 4&#10;1044-84-A, 6&#10;1043-02-D;1"></textarea></label>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-y" id="go" type="button">Перевірити список</button><button class="btn btn-l" id="ex" type="button">Вставити приклад</button>
+   <label class="btn btn-l" for="fi" style="cursor:pointer">Завантажити CSV/TXT</label><input id="fi" class="sr" type="file" accept=".csv,.txt,text/plain,text/csv"></div>
+  <div class="note info" style="margin-top:4px"><span>Артикул можна вводити з дефісами або без. Знаходимо за точним збігом.</span></div></div>
+ <div class="card" id="res"><h2>Результат</h2><div class="empty"><b>Список ще не перевірено</b>Вставте артикули зліва й натисніть «Перевірити список».</div></div></div>`;
+const find=a=>{const k=norm(a);return PRODUCTS.find(p=>norm(p.pn)===k)};
+let rows=[];
+function parse(){const out=[];$('#ta').value.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;const m=l.split(/[\s,;\t]+/).filter(Boolean);const art=m[0];let q=parseInt(m[1],10);if(!(q>0))q=1;out.push({art,q})});
+ rows=out.map(x=>({...x,p:find(x.art)}));paint()}
+function paint(){const ok=rows.filter(r=>r.p),bad=rows.filter(r=>!r.p),sum=ok.reduce((s,r)=>s+price(r.p,acc)*r.q,0),over=ok.filter(r=>r.q>r.p.stock);
+ $('#res').innerHTML=`<h2>Результат: знайдено ${ok.length} з ${rows.length}</h2>
+ ${bad.length?`<div class="note bad" style="margin-bottom:12px"><span>Не знайдено: <b>${bad.map(r=>r.art).join(', ')}</b>. Перевірте артикули.</span></div>`:''}
+ ${over.length?`<div class="note warn" style="margin-bottom:12px"><span>Кількість більша за наявну: ${over.map(r=>r.p.pn+' (є '+r.p.stock+')').join(', ')}. Решту доставимо під замовлення.</span></div>`:''}
+ <div class="tw"><table class="t"><thead><tr><th>Артикул</th><th>Назва</th><th>К-сть</th><th class="r">Ціна</th><th class="r">Сума</th></tr></thead><tbody>${rows.map((r,i)=>r.p?`<tr><td class="m">${r.p.pn}</td><td>${r.p.name}<br><small style="color:var(--mut)">${r.p.models.join(', ')}</small></td><td><div class="qty"><button type="button" data-i="${i}" data-d="-1" aria-label="Менше"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><input value="${r.q}" readonly aria-label="Кількість"><button type="button" data-i="${i}" data-d="1" aria-label="Більше"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></td><td class="r">${money(price(r.p,acc))}</td><td class="r"><b>${money(price(r.p,acc)*r.q)}</b></td></tr>`:`<tr style="background:var(--bad-bg)"><td class="m">${r.art}</td><td colspan="4" style="color:var(--bad)">Не знайдено в каталозі</td></tr>`).join('')}</tbody></table></div>
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--si-l)"><span>Разом за ваших цін: <b style="font:600 18px var(--hf)">${money(sum)}</b></span>
+ <button class="btn btn-y" id="add" type="button" ${ok.length?'':'disabled'}>Додати в кошик (${ok.length})</button></div>`}
+$('#go').onclick=()=>{if(!$('#ta').value.trim()){toast('Вставте список артикулів');$('#ta').focus();return}parse()};
+$('#ex').onclick=()=>{$('#ta').value='1007-31-B 4\n1044-84-A, 6\n1043-02-D;1\n'+PRODUCTS[40].pn+' 2\n9999-99-X 3';parse()};
+$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('#ta').value=String(r.result).slice(0,20000);parse()};r.readAsText(f)};
+$('#res').addEventListener('click',e=>{const d=e.target.closest('[data-d]');if(d){const r=rows[+d.dataset.i];r.q=Math.max(1,r.q+ +d.dataset.d);paint();return}
+ if(e.target.closest('#add')){rows.filter(r=>r.p).forEach(r=>cart.add(r.p.id,r.q));toast('Позиції додано в кошик');setTimeout(()=>location.href='cart.html',500)}});
+})();
+</script>
+</body></html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Документ — TEFAST B2B</title><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+<style>@page{size:A4;margin:14mm}</style>
+</head>
+<body style="background:#EDEDF0">
+<div class="sbar"><a class="btn btn-l btn-s" href="orders.html">← До замовлень</a><span id="ttl" style="font-weight:600"></span><div class="sp"><button class="btn btn-y btn-s" id="pr" type="button">Завантажити PDF</button></div></div>
+<article class="sheet" id="sheet" aria-live="polite"></article>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,money,fd,db,byId,pad}=B2B,q=new URLSearchParams(location.search),o=db().orders.find(x=>x.id===q.get('o')),wb=q.get('t')==='waybill';
+if(!o){$('#sheet').innerHTML='<div class="empty"><b>Документ не знайдено</b>Перевірте номер замовлення.</div>';return}
+const a=db().accounts.find(x=>x.id===o.acc)||{},num=(wb?'РН-':'СФ-')+o.id.slice(3),title=wb?'Видаткова накладна':'Рахунок на оплату';
+document.title=title+' '+num;$('#ttl').textContent=title+' № '+num;
+$('#sheet').innerHTML=`<h1>${title} № ${num}</h1><div class="meta">від ${fd(o.date)} · замовлення ${o.id}</div>
+<div class="two"><div><b>Постачальник</b>ТОВ «ТЕФАСТ» (приклад)<br>ЄДРПОУ 00000000 (приклад)<br>Полтава<br>р/р UA00 0000 0000 0000 0000 0000 0000 0 (приклад)</div>
+<div><b>Покупець</b>${a.name||'—'}<br>ЄДРПОУ ${a.edrpou||'—'}<br>${a.city||''}${a.address?', '+a.address:''}<br>${a.contact||''} ${a.phone||''}</div></div>
+<table class="t"><thead><tr><th>№</th><th>Артикул</th><th>Назва</th><th class="r">К-сть</th><th class="r">Ціна</th><th class="r">Сума</th></tr></thead><tbody>${o.items.map((i,n)=>{const p=byId(i.id);return`<tr><td>${n+1}</td><td class="m">${p.pn}</td><td>${p.name}</td><td class="r">${i.q}</td><td class="r">${money(i.price)}</td><td class="r">${money(i.price*i.q)}</td></tr>`}).join('')}</tbody></table>
+<div class="tot"><div><span>За роздрібними цінами</span><span>${money(o.retail)}</span></div><div><span>Знижка</span><span>−${money(o.retail-o.total)}</span></div><div class="g"><span>Всього до сплати</span><span>${money(o.total)}</span></div></div>
+<p style="margin-top:18px;color:var(--mut)">${wb?`Доставка: ${o.delivery}.`:o.pay==='deferral'?`Умови оплати: відстрочка, оплатити до ${fd(o.due)}.`:'Умови оплати: передоплата 100%.'} Суми вказано без ПДВ (приклад). Реквізити в цьому документі умовні.</p>
+<div class="sign"><span>${wb?'Відвантажив':'Виписав'}</span><span>${wb?'Отримав':'Підпис покупця'}</span></div>`;
+$('#pr').onclick=()=>print();
+if(q.get('print')==='1')setTimeout(()=>print(),400);
+})();
+</script>
+</body></html>

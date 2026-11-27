@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Профіль і умови — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+<style>.dl{display:grid;gap:0}.dl div{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--si-l)}.dl div:last-child{border:0}.dl dt{color:var(--mut)}.dl dd{margin:0;font-weight:600;text-align:right}</style>
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,money,fd,db,save,credit,discLabel,stBadge,toast,orders}=B2B;
+const acc=B2B.shell({active:'profile',title:'Профіль і умови',sub:'Дані СТО та умови співпраці'});if(!acc)return;
+const t=acc.terms,cr=credit(acc),pct=cr.limit?Math.min(100,cr.used/cr.limit*100):0;
+const due=orders().filter(o=>o.pay==='deferral'&&o.status!=='Скасовано').reduce((s,o)=>s+o.total,0);
+$('#view').innerHTML=`<div class="row2" style="align-items:start">
+ <form class="card" id="f" style="display:grid;gap:12px" novalidate><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Дані СТО</h2>${stBadge(acc.status)}</div>
+  <label class="fl">Назва<input value="${acc.name}" disabled></label>
+  <div class="g2"><label class="fl">ЄДРПОУ / ІПН<input value="${acc.edrpou}" disabled></label><label class="fl">Постів<input id="po" type="number" min="1" value="${acc.posts}"></label></div>
+  <div class="g2"><label class="fl">Контактна особа<input id="c" value="${acc.contact}"></label><label class="fl">Телефон<input id="t" value="${acc.phone}"></label></div>
+  <label class="fl">Email<input value="${acc.email}" disabled><small>Для зміни email зверніться до менеджера</small></label>
+  <div class="g2"><label class="fl">Місто<input id="ci" value="${acc.city}"></label><label class="fl">Адреса<input id="ad" value="${acc.address||''}"></label></div>
+  <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-y" type="submit">Зберегти</button><small style="color:var(--mut)">Верифікація: ${acc.auto?'автоматична':'ручна'} · з ${fd(acc.created)}</small></div></form>
+ <div style="display:grid;gap:16px"><div class="card"><h2>Умови співпраці</h2><dl class="dl">
+  <div><dt>Тип цін</dt><dd>${t.mode==='fixed'?'Фіксована знижка':'Знижка у відсотках'}</dd></div>
+  <div><dt>Ваша знижка</dt><dd>${discLabel(t)}</dd></div>
+  <div><dt>Мінімальне замовлення</dt><dd>${money(t.minOrder)}</dd></div>
+  <div><dt>Відстрочка платежу</dt><dd>${t.deferral?t.deferralDays+' днів':'не підключена'}</dd></div></dl>
+  <p style="color:var(--mut);margin-top:12px;font-size:12px">Умови встановлює менеджер. Щоб змінити їх, напишіть на b2b@tefast.example.</p></div>
+ <div class="card"><h2>Кредитний ліміт</h2>${t.deferral?`<div class="kpi"><small>Доступно</small><b>${money(cr.free)}</b></div><div class="bar ${pct>85?'bad':pct>65?'warn':''}"><i style="width:${pct}%"></i></div>
+  <dl class="dl" style="margin-top:8px"><div><dt>Ліміт</dt><dd>${money(cr.limit)}</dd></div><div><dt>Використано</dt><dd>${money(cr.used)}</dd></div><div><dt>Рахунків на відстрочці</dt><dd>${money(due)}</dd></div></dl>`:'<div class="empty" style="padding:16px"><b>Не підключено</b>Для відстрочки та ліміту зверніться до менеджера.</div>'}</div></div></div>`;
+$('#f').onsubmit=e=>{e.preventDefault();const v=k=>$('#'+k).value.trim();if(v('c').length<2||v('t').replace(/\D/g,'').length<10||v('ci').length<2){toast('Перевірте контакт, телефон і місто');return}
+ const D=db(),a=D.accounts.find(x=>x.id===acc.id);Object.assign(a,{contact:v('c'),phone:v('t'),city:v('ci'),address:v('ad'),posts:+v('po')||1});save();toast('Дані збережено')};
+})();
+</script>
+</body></html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кошик — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+<style>.ci{display:grid;grid-template-columns:48px minmax(0,1fr) auto auto auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--si-l);transition:opacity var(--d-fast) var(--ease-in),transform var(--d-fast) var(--ease-in)}.ci:last-child{border:0}.ci.out{opacity:0;transform:translateX(-10px)}.ci img{width:48px;height:48px;border-radius:10px;object-fit:cover}.ci h3{font:500 13.5px/1.3 var(--bf);letter-spacing:0}.ci small{color:var(--mut)}.ci .s{font:600 15px var(--hf);min-width:92px;text-align:right}.rm{border:0;background:none;color:var(--mut);cursor:pointer;width:34px;height:34px;border-radius:10px;display:grid;place-items:center}.rm:hover{background:var(--bad-bg);color:var(--bad)}.sum{position:sticky;top:76px;display:grid;gap:12px}.sum .ln{display:flex;justify-content:space-between;gap:10px}.sum .ln.t{border-top:1px solid var(--si-l);padding-top:12px;font-size:16px}.sum .ln.t b{font:600 22px var(--hf)}@media(max-width:620px){.ci{grid-template-columns:48px 1fr auto}.ci .qty{grid-column:2}.ci .s{grid-column:3;grid-row:2}}</style>
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,$$,money,cart,toast,credit,createOrder,fd,days,ico,IC}=B2B;
+const acc=B2B.shell({active:'cart',title:'Кошик',sub:'Оформлення замовлення'});if(!acc)return;
+const t=acc.terms;let pay='prepay';
+function draw(){const T=cart.totals(acc);
+ if(!T.items.length){$('#view').innerHTML=`<div class="card empty"><b>Кошик порожній</b><p style="margin-bottom:16px">Додайте позиції з каталогу або списком артикулів.</p><a class="btn btn-y" href="catalog.html">До каталогу</a> <a class="btn btn-l" href="quick.html">Швидке замовлення</a></div>`;return}
+ const cr=credit(acc),canDef=t.deferral&&T.total<=cr.free,minOk=T.total>=t.minOrder,left=Math.max(0,t.minOrder-T.total),pc=Math.min(100,T.total/t.minOrder*100);
+ if(pay==='deferral'&&!canDef)pay='prepay';
+ $('#view').innerHTML=`<div class="row2" style="grid-template-columns:1.7fr 1fr;align-items:start"><div style="display:grid;gap:16px">
+  <div class="card"><h2>Позиції (${cart.count()})</h2>${T.items.map(x=>`<div class="ci" data-id="${x.id}"><img src="${x.p.img}" alt=""><div><h3>${x.p.name}</h3><small>${x.p.pn} · ${x.p.type}</small></div>
+   <div class="qty"><button type="button" data-d="-1" aria-label="Менше"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><input value="${x.q}" readonly aria-label="Кількість"><button type="button" data-d="1" aria-label="Більше"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+   <div class="s">${money(x.price*x.q)}${x.price<x.retail?`<br><small style="font:400 11px var(--bf);text-decoration:line-through;color:#9a99a1">${money(x.retail*x.q)}</small>`:''}</div>
+   <button class="rm" type="button" data-rm aria-label="Видалити"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>`).join('')}</div>
+  <div class="card"><h2>Оплата</h2><div style="display:grid;gap:8px">
+   <label class="opt"><input type="radio" name="pay" value="prepay" ${pay==='prepay'?'checked':''}><span><b>Передоплата за рахунком</b><small>Рахунок у PDF формується одразу після оформлення</small></span></label>
+   <label class="opt ${canDef?'':'dis'}"><input type="radio" name="pay" value="deferral" ${pay==='deferral'?'checked':''} ${canDef?'':'disabled'}><span><b>Відстрочка платежу${t.deferral?' · '+t.deferralDays+' днів':''}</b><small>${!t.deferral?'Не підключена для вашого СТО':canDef?`Оплатити до ${fd(days(t.deferralDays))}. Після замовлення вільний ліміт: ${money(cr.free-T.total)}`:`Перевищено кредитний ліміт: доступно ${money(cr.free)}, а сума ${money(T.total)}`}</small></span></label></div></div>
+  <div class="card"><h2>Доставка</h2><div class="g2"><label class="fl">Спосіб<select id="dl"><option>Нова пошта, відділення</option><option>Кур'єр Нової пошти</option><option>Самовивіз зі складу (Полтава)</option></select></label><label class="fl">Коментар<input id="cm" placeholder="VIN або побажання"></label></div></div></div>
+ <aside class="card sum" aria-label="Підсумок"><h2 style="margin:0">Підсумок</h2>
+  <div class="ln"><span>За роздрібними цінами</span><span>${money(T.retail)}</span></div><div class="ln" style="color:var(--ok)"><span>Ваша знижка (${B2B.discLabel(t)})</span><span>−${money(T.discount)}</span></div>
+  <div class="ln t"><span>До сплати</span><b>${money(T.total)}</b></div>
+  <div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mut)"><span>Мінімальне замовлення ${money(t.minOrder)}</span><span>${minOk?'виконано':'не вистачає '+money(left)}</span></div><div class="bar ${minOk?'':'warn'}"><i style="width:${pc}%"></i></div></div>
+  ${minOk?'':`<div class="note warn"><span>Додайте товарів ще на <b>${money(left)}</b>, щоб оформити замовлення.</span></div>`}
+  <button class="btn btn-y" id="ok" type="button" style="min-height:44px" ${minOk?'':'disabled'}>Оформити замовлення</button><button class="btn btn-l btn-s" id="cl" type="button">Очистити кошик</button></aside></div>`;
+}
+document.addEventListener('click',e=>{const row=e.target.closest('.ci');
+ if(row){const id=row.dataset.id,it=cart.get().find(x=>x.id===id);const d=e.target.closest('[data-d]');
+  if(d){cart.qty(id,it.q+ +d.dataset.d);draw();return}
+  if(e.target.closest('[data-rm]')){if(!matchMedia('(prefers-reduced-motion:reduce)').matches){row.classList.add('out');setTimeout(()=>{cart.qty(id,0);draw()},170)}else{cart.qty(id,0);draw()}return}}
+ if(e.target.closest('#cl')){cart.clear();draw();return}
+ if(e.target.closest('#ok')){const T=cart.totals(acc);if(T.total<t.minOrder)return;const o=createOrder(acc,{pay,delivery:$('#dl').value,comment:$('#cm').value.trim()});
+  toast('Замовлення '+o.id+' оформлено');setTimeout(()=>location.href='orders.html?new='+o.id,500)}});
+document.addEventListener('change',e=>{if(e.target.name==='pay'){pay=e.target.value;const dl=$('#dl')&&$('#dl').value,cm=$('#cm')&&$('#cm').value;draw();$('#dl').value=dl;$('#cm').value=cm}});
+draw();
+})();
+</script>
+</body></html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Головна — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,money,fd,cart,orders,credit,discLabel,oBadge,stBadge,ico,toast,byId}=B2B;
+const acc=B2B.shell({active:'home',title:'Головна',sub:'Кабінет СТО'});if(!acc)return;
+const t=acc.terms,cr=credit(acc),os=orders(),pct=cr.limit?Math.min(100,cr.used/cr.limit*100):0;
+const due=os.filter(o=>o.pay==='deferral'&&o.status!=='Скасовано'&&o.due).sort((a,b)=>a.due.localeCompare(b.due));
+const next=due.find(o=>new Date(o.due)>=new Date())||due[0];
+$('#view').innerHTML=`
+<div class="row4">
+ <div class="card kpi"><small>Ваші ціни</small><b>${t.mode==='fixed'?money(t.value):t.value+'%'}</b><span>${discLabel(t)}</span></div>
+ <div class="card kpi"><small>Мінімальне замовлення</small><b>${money(t.minOrder)}</b><span>в одному замовленні</span></div>
+ <div class="card kpi"><small>Відстрочка платежу</small><b>${t.deferral?t.deferralDays+' дн.':'—'}</b><span>${t.deferral?'на кожне замовлення':'не підключена'}</span></div>
+ <div class="card kpi"><small>Доступний ліміт</small><b>${t.deferral?money(cr.free):'—'}</b>${t.deferral?`<div class="bar ${pct>85?'bad':pct>65?'warn':''}"><i style="width:${pct}%"></i></div><span>використано ${money(cr.used)} з ${money(cr.limit)}</span>`:'<span>кредитний ліміт не встановлено</span>'}</div>
+</div>
+<div class="row2" style="grid-template-columns:1.6fr 1fr">
+ <div class="card"><h2>Швидкі дії</h2><div class="row3">
+  <a class="card" href="quick.html" style="background:var(--y-s);border-color:var(--y);display:grid;gap:6px"><span style="width:36px;height:36px;border-radius:10px;background:var(--y);display:grid;place-items:center">${ico('bolt')}</span><b>Швидке замовлення</b><small style="color:var(--mut)">Вставте список артикулів</small></a>
+  <a class="card" href="catalog.html" style="display:grid;gap:6px"><span style="width:36px;height:36px;border-radius:10px;background:var(--bg);display:grid;place-items:center">${ico('cat')}</span><b>Каталог за моделлю</b><small style="color:var(--mut)">Розділи та підкатегорії</small></a>
+  <button class="card" id="rep" type="button" style="display:grid;gap:6px;text-align:left;cursor:pointer"><span style="width:36px;height:36px;border-radius:10px;background:var(--bg);display:grid;place-items:center">${ico('list')}</span><b>Повторити останнє</b><small style="color:var(--mut)">${os[0]?'№ '+os[0].id:'Замовлень ще немає'}</small></button></div></div>
+ <div class="card"><h2>Найближчий платіж</h2>${next?`<div class="kpi"><b>${money(next.total)}</b><span>Замовлення ${next.id}, оплатити до <b>${fd(next.due)}</b></span></div><a class="btn btn-l btn-s" style="margin-top:12px" href="orders.html">Документи</a>`:'<div class="empty" style="padding:16px"><b>Платежів немає</b>Відстрочених рахунків немає.</div>'}</div>
+</div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0">Останні замовлення</h2><a class="btn btn-l btn-s" href="orders.html">Усі замовлення</a></div>
+ ${os.length?`<div class="tw"><table class="t"><thead><tr><th>Номер</th><th>Дата</th><th>Оплата</th><th class="r">Сума</th><th>Статус</th></tr></thead><tbody>${os.slice(0,5).map(o=>`<tr><td><b>${o.id}</b></td><td>${fd(o.date)}</td><td>${o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата'}</td><td class="r"><b>${money(o.total)}</b></td><td>${oBadge(o.status)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><b>Замовлень ще немає</b>Створіть перше через каталог або швидке замовлення.</div>'}</div>`;
+$('#rep').onclick=()=>{if(!os[0]){toast('Спочатку створіть замовлення');return}os[0].items.forEach(i=>cart.add(i.id,i.q));toast('Позиції додано в кошик');setTimeout(()=>location.href='cart.html',500)};
+})();
+</script>
+</body></html>

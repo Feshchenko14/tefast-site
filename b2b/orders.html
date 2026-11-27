@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Мої замовлення — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+<style>.xr>td{padding:0!important;background:var(--bg)}.xd{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--d) var(--ease-in)}.xr.open .xd{grid-template-rows:1fr;transition:grid-template-rows var(--d-slow) var(--ease)}.xd>div{overflow:hidden;min-height:0}.xi{padding:14px 16px 16px}.xi table{width:100%}.xi td,.xi th{padding:6px 8px;font-size:13px}.ex{cursor:pointer}.ex .ch{transition:transform var(--d) var(--ease)}.ex.open .ch{transform:rotate(90deg)}.docs{display:flex;gap:6px;flex-wrap:wrap}.new td{animation:hl 2s var(--ease) 1}@keyframes hl{from{background:var(--y-s)}to{background:transparent}}</style>
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,$$,money,fd,cart,orders,oBadge,toast,byId}=B2B;
+const acc=B2B.shell({active:'orders',title:'Мої замовлення',sub:'Історія, документи, повтор'});if(!acc)return;
+const nw=new URLSearchParams(location.search).get('new'),os=orders();
+const pdf='<svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg>';
+$('#view').innerHTML=os.length?`${nw?`<div class="note ok"><span>Замовлення <b>${nw}</b> оформлено. Рахунок уже доступний у PDF.</span></div>`:''}<div class="card" style="padding:8px 8px 0"><div class="tw"><table class="t"><thead><tr><th></th><th>Номер</th><th>Дата</th><th>Оплата</th><th class="r">Сума</th><th>Статус</th><th>Документи</th></tr></thead><tbody>
+${os.map(o=>`<tr class="ex${o.id===nw?' new':''}" data-o="${o.id}"><td><svg class="i ch" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></td><td><b>${o.id}</b></td><td>${fd(o.date,1)}</td><td>${o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата'}</td><td class="r"><b>${money(o.total)}</b></td><td>${oBadge(o.status)}</td>
+ <td><div class="docs"><a class="btn btn-l btn-s" target="_blank" rel="noopener" href="invoice.html?o=${o.id}&t=invoice">${pdf}Рахунок</a><a class="btn btn-l btn-s" target="_blank" rel="noopener" href="invoice.html?o=${o.id}&t=waybill">${pdf}Накладна</a></div></td></tr>
+ <tr class="xr"><td colspan="7"><div class="xd"><div><div class="xi"><table class="t"><thead><tr><th>Артикул</th><th>Назва</th><th>К-сть</th><th class="r">Ціна</th><th class="r">Сума</th></tr></thead><tbody>${o.items.map(i=>{const p=byId(i.id);return`<tr><td class="m">${p.pn}</td><td>${p.name}</td><td>${i.q}</td><td class="r">${money(i.price)}</td><td class="r">${money(i.price*i.q)}</td></tr>`}).join('')}</tbody></table>
+ <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 8px 0;gap:10px;flex-wrap:wrap"><span style="color:var(--mut)">Доставка: ${o.delivery}${o.comment?' · '+o.comment:''}</span><button class="btn btn-d btn-s" data-rep="${o.id}" type="button">Повторити замовлення</button></div></div></div></div></td></tr>`).join('')}</tbody></table></div></div>`
+ :`<div class="card empty"><b>Замовлень ще немає</b><p style="margin-bottom:16px">Створіть перше замовлення через каталог.</p><a class="btn btn-y" href="catalog.html">До каталогу</a></div>`;
+$('#view').addEventListener('click',e=>{const r=e.target.closest('.ex');if(r&&!e.target.closest('a')){r.classList.toggle('open');r.nextElementSibling.classList.toggle('open')}
+ const rep=e.target.closest('[data-rep]');if(rep){const o=os.find(x=>x.id===rep.dataset.rep);o.items.forEach(i=>cart.add(i.id,i.q));toast('Позиції додано в кошик');setTimeout(()=>location.href='cart.html',500)}});
+if(nw){const r=$(`[data-o="${nw}"]`);r&&(r.classList.add('open'),r.nextElementSibling.classList.add('open'))}
+})();
+</script>
+</body></html>

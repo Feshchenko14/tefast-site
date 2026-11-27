@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Каталог — TEFAST B2B</title><meta name="theme-color" content="#FFDE01"><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b2b.css">
+</head>
+<body>
+<main id="view"></main>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script>
+(()=>{const {$,$$,money,price,avail,cart,toast,ico,norm,seg,IC}=B2B;
+const acc=B2B.shell({active:'catalog',title:'Каталог',sub:'Підбір за авто і розділами'});if(!acc)return;
+const q=new URLSearchParams(location.search),PER=20;
+const st={model:MODELS.includes(q.get('model'))?q.get('model'):'',grp:GROUPS.includes(q.get('grp'))?q.get('grp'):'',sub:q.get('sub')||'',q:q.get('q')||'',types:new Set,mode:'delivery',n:PER,ts:''};
+$('#view').innerHTML=`<div class="cat"><aside class="card tree" aria-label="Розділи"><form class="tsearch" onsubmit="return false">${ico('search')}<label class="sr" for="ts">Пошук категорії</label><input id="ts" placeholder="Пошук категорії…" autocomplete="off"></form>
+ <button class="btn btn-l btn-s" id="all" type="button" style="width:100%;margin-bottom:8px">Усі розділи</button><div id="tree"></div></aside>
+ <section style="display:grid;gap:12px;min-width:0"><div class="card tb"><h2 id="h">Товари<small id="cnt"></small></h2><div class="mods" id="mods" role="group" aria-label="Модель"></div>
+  <div class="sp"><div class="mods" id="types" role="group" aria-label="Тип"></div><div id="mode" role="group" aria-label="Отримання"><button data-v="delivery" class="on" type="button">Доставка</button><button data-v="pickup" type="button">Самовивіз</button><button data-v="np" type="button">Нова Пошта</button></div></div></div>
+  <div id="active"></div><div class="plist" id="list"></div><div class="more" id="more"></div></section></div><div class="pop" id="pop" role="dialog" aria-label="Доступність"></div>`;
+const inM=p=>!st.model||p.models.includes(st.model);
+const match=p=>inM(p)&&(!st.grp||p.grp===st.grp)&&(!st.sub||p.sub===st.sub)&&(!st.types.size||st.types.has(p.cond==='Б/В'?'Б/В':p.type))&&(!st.q||norm(p.name+p.pn+p.sub).includes(norm(st.q)));
+/* дерево */
+function tree(){const f=norm(st.ts);$('#tree').innerHTML=TREE.map(t=>{const subs=t.s.filter(s=>!f||norm(s).includes(f)||norm(t.g).includes(f));if(!subs.length)return'';
+ const open=st.grp===t.g||!!f,n=PRODUCTS.filter(p=>inM(p)&&p.grp===t.g).length;
+ return`<div class="tg${open?' open':''}" data-g="${t.g}"><button type="button" aria-expanded="${open}"><svg class="i" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>${t.g}<small>${n}</small></button>
+ <div class="tsub"><div>${subs.map(s=>`<button type="button" data-s="${s}" class="${st.sub===s&&st.grp===t.g?'on':''}">${s}<small>${PRODUCTS.filter(p=>inM(p)&&p.sub===s&&p.grp===t.g).length}</small></button>`).join('')}</div></div></div>`}).join('')||'<div class="empty"><b>Нічого не знайдено</b></div>'}
+$('#tree').addEventListener('click',e=>{const g=e.target.closest('.tg>button'),s=e.target.closest('.tsub button');
+ if(s){st.grp=s.closest('.tg').dataset.g;st.sub=s.dataset.s;st.n=PER;tree();render(true)}else if(g){const o=g.parentElement.classList.toggle('open');g.setAttribute('aria-expanded',o)}});
+$('#ts').oninput=e=>{st.ts=e.target.value;tree()};
+$('#all').onclick=()=>{st.grp=st.sub='';st.q='';st.n=PER;tree();render(true)};
+/* модель і тип */
+$('#mods').innerHTML=['',...MODELS].map(m=>`<button type="button" data-m="${m}" class="${st.model===m?'on':''}">${m||'Усі авто'}</button>`).join('');
+$('#mods').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.model=b.dataset.m;st.n=PER;$$('#mods button').forEach(x=>x.classList.toggle('on',x===b));tree();render(true)};
+$('#types').innerHTML=['Оригінал','Аналог','Б/В'].map(t=>`<button type="button" data-t="${t}">${t}</button>`).join('');
+$('#types').onclick=e=>{const b=e.target.closest('button');if(!b)return;const t=b.dataset.t;st.types.has(t)?st.types.delete(t):st.types.add(t);b.classList.toggle('on');st.n=PER;render(true)};
+seg($('#mode'),v=>{st.mode=v});$('#mode').style.display='inline-flex';
+/* список */
+function row(p,i){const a=avail(p),pr=price(p,acc),z=v=>v?'':' class="z"';
+ return`<article class="pr e" style="--i:${i}" data-id="${p.id}"><div class="ph"><img src="${p.img}" alt="" loading="lazy"></div>
+ <div class="nm"><div class="tg2"><span class="br">${p.cond==='Б/В'?'Б/В':p.type}</span><span class="art">${p.pn}</span><button class="cp" type="button" data-cp="${p.pn}" aria-label="Копіювати артикул ${p.pn}"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></div><h3>${p.name}</h3><small>${p.models.join(', ')} · ${p.grp} › ${p.sub}</small></div>
+ <button class="av3" type="button" data-av="${p.id}" aria-label="Доступність: ${p.stock} шт"><span${z(a.today)}><small>сьогодні</small>${a.today}</span><span${z(a.tomorrow)}><small>завтра</small>${a.tomorrow}</span><span><small>${a.laterDate}</small>${a.later}</span></button>
+ <div class="prc">${pr<p.price?`<s>${money(p.price)}</s>`:''}<b>${money(pr)}</b>${pr<p.price?`<em>−${Math.round((1-pr/p.price)*100)}%</em>`:''}</div>
+ <div class="buy"><div class="qty"><button type="button" data-q="-1" aria-label="Менше"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><input value="1" inputmode="numeric" aria-label="Кількість"><button type="button" data-q="1" aria-label="Більше"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+ <button class="cbtn" type="button" data-add="${p.id}" aria-label="Додати в кошик: ${p.name}"><svg class="i" viewBox="0 0 24 24">${IC.cart}</svg></button></div></article>`}
+function render(scroll){const r=PRODUCTS.filter(match);$('#cnt').textContent=r.length+' '+((n,m=n%100,d=n%10)=>m>10&&m<20?'товарів':d===1?'товар':d>1&&d<5?'товари':'товарів')(r.length);
+ $('#list').innerHTML=r.length?r.slice(0,st.n).map(row).join(''):'<div class="card empty"><b>Нічого не знайдено</b>Змініть модель, розділ або пошуковий запит.</div>';
+ $('#more').innerHTML=r.length>st.n?`<button class="btn btn-l" id="mb" type="button">Показати ще ${Math.min(PER,r.length-st.n)} з ${r.length-st.n}</button>`:'';
+ const chips=[st.grp&&`${st.grp}${st.sub?' › '+st.sub:''}`,st.q&&`Пошук: «${st.q}»`].filter(Boolean);
+ $('#active').innerHTML=chips.length?`<div class="mods">${chips.map(c=>`<button class="on" type="button" data-x>${c} ✕</button>`).join('')}</div>`:'';
+ if(scroll)scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
+$('#more').onclick=e=>{if(e.target.closest('#mb')){st.n+=PER;render()}};
+$('#active').onclick=()=>{st.grp=st.sub=st.q='';tree();render()};
+/* дії в рядках */
+$('#list').addEventListener('click',e=>{const r=e.target.closest('.pr');if(!r)return;const id=r.dataset.id,qi=$('.qty input',r);
+ const cp=e.target.closest('[data-cp]');if(cp){navigator.clipboard&&navigator.clipboard.writeText(cp.dataset.cp);toast('Артикул скопійовано: '+cp.dataset.cp);return}
+ const qb=e.target.closest('[data-q]');if(qb){qi.value=Math.max(1,(+qi.value||1)+ +qb.dataset.q);return}
+ const ad=e.target.closest('[data-add]');if(ad){const n=Math.max(1,+qi.value||1);cart.add(id,n);toast(`Додано в кошик: ${B2B.byId(id).name} × ${n}`);const u=ad.firstElementChild;ad.classList.remove('done');void ad.offsetWidth;ad.innerHTML='<svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';ad.classList.add('done');clearTimeout(ad._t);ad._t=setTimeout(()=>{ad.innerHTML=`<svg class="i" viewBox="0 0 24 24">${IC.cart}</svg>`;ad.classList.remove('done')},1100);return}
+ const av=e.target.closest('[data-av]');if(av)showPop(av,B2B.byId(av.dataset.av))});
+/* доступність */
+const pop=$('#pop');let pp=null;
+function showPop(el,p){if(pp===el&&pop.classList.contains('on')){hidePop();return}pp=el;const a=avail(p);
+ const d=B2B.days,f=n=>{const x=d(n);return B2B.pad(x.getDate())+'.'+B2B.pad(x.getMonth()+1)};
+ const rows={delivery:[['Сьогодні до 17:00',a.today],['Завтра до 12:00',a.tomorrow],[a.laterDate+' до 17:00',a.later]],pickup:[['Сьогодні, склад Полтава',a.today],['Завтра, склад Полтава',a.tomorrow],['Під замовлення '+f(3),a.later]],np:[[f(1)+' відправлення',a.today+a.tomorrow],[f(2)+' відправлення',a.later]]};
+ pop.innerHTML=`<h4>Доступність</h4><div class="seg" id="pm"><button data-v="delivery" class="${st.mode==='delivery'?'on':''}">Доставка</button><button data-v="pickup" class="${st.mode==='pickup'?'on':''}">Самовивіз</button><button data-v="np" class="${st.mode==='np'?'on':''}">Нова Пошта</button></div><div id="pr"></div><div class="tot"><span>Всього</span><span>${a.total} шт</span></div>`;
+ const paint=m=>{$('#pr').innerHTML=rows[m].map(r=>`<div class="ln${r[1]?'':' z'}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')};paint(st.mode);B2B.seg($('#pm'),v=>paint(v));
+ const b=el.getBoundingClientRect(),w=340;let x=Math.min(Math.max(8,b.left),innerWidth-w-8),y=b.bottom+8;if(y+280>innerHeight)y=Math.max(8,b.top-290);pop.style.left=x+'px';pop.style.top=y+'px';pop.classList.add('on');$('#pm')._mv&&$('#pm')._mv()}
+const hidePop=()=>{pop.classList.remove('on');pp=null};
+addEventListener('click',e=>{if(!e.target.closest('#pop')&&!e.target.closest('[data-av]'))hidePop()});addEventListener('scroll',hidePop,{passive:true});addEventListener('keydown',e=>{if(e.key==='Escape')hidePop()});
+tree();render();
+})();
+</script>
+</body></html>
