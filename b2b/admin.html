@@ -13,17 +13,24 @@
 .ed.on{transform:none;transition:transform var(--d-slow) var(--ease)}
 .ov{position:fixed;inset:0;background:rgba(41,40,45,.5);z-index:70;opacity:0;pointer-events:none;transition:opacity var(--d) var(--ease-in)}.ov.on{opacity:1;pointer-events:auto;transition:opacity var(--d-slow) var(--ease)}
 .ed form{display:grid;gap:12px}.ed h2{margin-bottom:6px}
-tr[data-a]{cursor:pointer}
+tr[data-a],tr[data-ord]{cursor:pointer}
+tr[data-ord].isnew td:first-child{box-shadow:inset 4px 0 0 var(--y)}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;padding:6px 12px 10px}
+.fchips button{border:1.5px solid var(--si-l);background:#fff;border-radius:10px;padding:0 12px;min-height:34px;font-weight:600;cursor:pointer;transition:background var(--d-fast) var(--ease),border-color var(--d-fast) var(--ease)}
+.fchips button:hover{border-color:var(--ink)}.fchips button.on{background:var(--y);border-color:var(--y)}
+.od{width:min(520px,100vw)}.od .kv{display:grid;gap:0;margin:12px 0}.od .kv div{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--si-l)}.od .kv dt{color:var(--mut)}.od .kv dd{margin:0;font-weight:600;text-align:right}
+.od .it{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--si-l)}.od .it img{width:44px;height:44px;border-radius:10px;object-fit:cover}.od .it b{display:block;font-weight:600}.od .it small{color:var(--mut)}.od .it .s{text-align:right;font-weight:600;white-space:nowrap}
+.od .tt{display:grid;gap:6px;margin:14px 0}.od .tt div{display:flex;justify-content:space-between}.od .tt .g{font:600 18px var(--hf);border-top:2px solid var(--ink);padding-top:10px;margin-top:4px}
 </style>
 </head>
 <body>
 <div class="ah"><a href="../index.html"><img src="../logo.png" alt="TEFAST"></a><b>Панель менеджера (демо)</b><div class="sp"><a class="btn btn-l btn-s" href="login.html">Кабінет СТО</a><button class="btn btn-y btn-s" id="rs" type="button">Скинути демо-дані</button></div></div>
 <main class="wrap" id="view" aria-live="polite"></main>
-<div class="ov" id="ov"></div><aside class="ed" id="ed" aria-label="Редагування СТО"></aside>
+<div class="ov" id="ov"></div><aside class="ed" id="ed" aria-label="Редагування СТО"></aside><aside class="ed od" id="od" aria-label="Склад замовлення"></aside>
 <script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
 <script>
 (()=>{const {$,$$,money,fd,db,save,stBadge,oBadge,toast,reset,seg,byId}=B2B;
-let cur=null;
+let cur=null,ofl='all';
 const OS=['Новий','В обробці','Відправлено','Виконано','Скасовано'];
 function draw(){const D=db(),cnt=s=>D.accounts.filter(a=>a.status===s).length;
  $('#view').innerHTML=`<div class="note info"><span>Це імітація панелі менеджера: зміни зберігаються в браузері й одразу впливають на кабінет СТО (ціни, ліміт, статус).</span></div>
@@ -31,8 +38,8 @@ function draw(){const D=db(),cnt=s=>D.accounts.filter(a=>a.status===s).length;
   <div class="card kpi"><small>Верифікація нових</small><div class="seg" id="vm"><button data-v="manual" class="${D.settings.verifyMode==='manual'?'on':''}">Ручна</button><button data-v="auto" class="${D.settings.verifyMode==='auto'?'on':''}">Автоматична</button></div><span>для нових реєстрацій</span></div></div>
  <div class="card" style="padding:8px 8px 0"><h2 style="padding:12px 12px 0">СТО-партнери</h2><div class="tw"><table class="t"><thead><tr><th>СТО</th><th>ЄДРПОУ</th><th>Статус</th><th>Ціни</th><th class="r">Мін. замовлення</th><th>Відстрочка</th><th class="r">Ліміт (використано)</th></tr></thead><tbody>
  ${D.accounts.map(a=>`<tr data-a="${a.id}" tabindex="0"><td><b>${a.name}</b><br><small style="color:var(--mut)">${a.contact} · ${a.email}</small></td><td class="m">${a.edrpou}</td><td>${stBadge(a.status)}</td><td>${a.terms.mode==='fixed'?'−'+money(a.terms.value)+'/од.':'−'+a.terms.value+'%'}</td><td class="r">${money(a.terms.minOrder)}</td><td>${a.terms.deferral?a.terms.deferralDays+' дн.':'—'}</td><td class="r">${a.terms.deferral?money(a.terms.creditLimit)+' ('+money(a.terms.used)+')':'—'}</td></tr>`).join('')}</tbody></table></div></div>
- <div class="card" style="padding:8px 8px 0"><h2 style="padding:12px 12px 0">Замовлення</h2>${D.orders.length?`<div class="tw"><table class="t"><thead><tr><th>Номер</th><th>СТО</th><th>Дата</th><th>Оплата</th><th class="r">Сума</th><th>Статус</th></tr></thead><tbody>
- ${[...D.orders].sort((a,b)=>b.date.localeCompare(a.date)).map(o=>{const a=D.accounts.find(x=>x.id===o.acc)||{name:'—'};return`<tr><td><b>${o.id}</b></td><td>${a.name}</td><td>${fd(o.date)}</td><td>${o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата'}</td><td class="r"><b>${money(o.total)}</b></td><td><label class="sr" for="s${o.id}">Статус</label><select class="fl" id="s${o.id}" data-o="${o.id}" style="height:34px;border-radius:10px;border:1.5px solid var(--si-l);padding:0 8px;background:#fff">${OS.map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}</select></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty"><b>Замовлень немає</b></div>'}</div>`;
+ <div class="card" style="padding:8px 8px 0"><h2 style="padding:12px 12px 6px">Замовлення</h2><div class="fchips" id="of"><button type="button" data-f="all" class="${ofl==='all'?'on':''}">Усі (${D.orders.length})</button><button type="button" data-f="new" class="${ofl==='new'?'on':''}">Нові (${D.orders.filter(o=>o.status==='Новий').length})</button></div>${D.orders.length?`<div class="tw"><table class="t"><thead><tr><th>Номер</th><th>СТО</th><th>Дата</th><th>Оплата</th><th class="r">Сума</th><th>Статус</th></tr></thead><tbody>
+ ${[...D.orders].filter(o=>ofl==='all'||o.status==='Новий').sort((a,b)=>b.date.localeCompare(a.date)).map(o=>{const a=D.accounts.find(x=>x.id===o.acc)||{name:'—'};return`<tr data-ord="${o.id}" tabindex="0" class="${o.status==='Новий'?'isnew':''}"><td><b>${o.id}</b></td><td>${a.name}</td><td>${fd(o.date)}</td><td>${o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата'}</td><td class="r"><b>${money(o.total)}</b></td><td><label class="sr" for="s${o.id}">Статус</label><select class="fl" id="s${o.id}" data-o="${o.id}" style="height:34px;border-radius:10px;border:1.5px solid var(--si-l);padding:0 8px;background:#fff">${OS.map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}</select></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty"><b>Замовлень немає</b></div>'}</div>`;
  seg($('#vm'),v=>{db().settings.verifyMode=v;save();toast('Верифікація нових СТО: '+(v==='auto'?'автоматична':'ручна'))})}
 function edit(id){cur=db().accounts.find(a=>a.id===id);const a=cur,t=a.terms;
  $('#ed').innerHTML=`<form id="ef" novalidate><h2>${a.name}</h2><small style="color:var(--mut)">ЄДРПОУ ${a.edrpou} · ${a.contact}, ${a.phone}</small>
@@ -50,9 +57,20 @@ function edit(id){cur=db().accounts.find(a=>a.id===id);const a=cur,t=a.terms;
  $('#ef').onsubmit=e=>{e.preventDefault();const n=k=>Math.max(0,+$('#'+k).value||0);a.status=status;a.reason=status==='suspended'?$('#re').value.trim():'';
   Object.assign(a.terms,{mode,value:n('ev'),minOrder:n('emn'),deferral:$('#ed2').checked,deferralDays:n('edd'),creditLimit:n('ecl'),used:n('eu')});if(!a.terms.deferral){a.terms.deferralDays=0}save();close();draw();toast('Збережено')};
  $('#ed').classList.add('on');$('#ov').classList.add('on');requestAnimationFrame(()=>{$('#es')._mv&&$('#es')._mv();$('#em')._mv&&$('#em')._mv()})}
-function close(){$('#ed').classList.remove('on');$('#ov').classList.remove('on')}
-$('#ov').onclick=close;addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Enter'&&e.target.matches('tr[data-a]'))edit(e.target.dataset.a)});
-$('#view').addEventListener('click',e=>{const r=e.target.closest('tr[data-a]');if(r)edit(r.dataset.a)});
+function close(){$('#ed').classList.remove('on');$('#od').classList.remove('on');$('#ov').classList.remove('on')}
+function order(id){const D=db(),o=D.orders.find(x=>x.id===id);if(!o)return;const a=D.accounts.find(x=>x.id===o.acc)||{name:'—'};
+ $('#od').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h2 style="margin:0">Замовлення ${o.id}</h2><small style="color:var(--mut)">${fd(o.date,1)} · ${a.name}</small></div><button class="btn btn-l btn-s" type="button" id="ox" aria-label="Закрити">✕</button></div>
+  <dl class="kv"><div><dt>Статус</dt><dd><select id="os" style="height:34px;border-radius:10px;border:1.5px solid var(--si);padding:0 8px;background:#fff">${OS.map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}</select></dd></div>
+  <div><dt>Оплата</dt><dd>${o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата'}</dd></div><div><dt>Доставка</dt><dd>${o.delivery}</dd></div>${o.comment?`<div><dt>Коментар</dt><dd>${o.comment}</dd></div>`:''}</dl>
+  <h3 style="margin:14px 0 4px;font-size:13px">Склад замовлення (${o.items.length} поз., ${o.items.reduce((s,i)=>s+i.q,0)} шт.)</h3>
+  ${o.items.map(i=>{const p=byId(i.id);return`<div class="it"><img src="${p.img}" alt=""><div><b>${p.name}</b><small>${p.pn} · ${i.q} × ${money(i.price)}</small></div><div class="s">${money(i.price*i.q)}</div></div>`}).join('')}
+  <div class="tt"><div><span>За роздрібними цінами</span><span>${money(o.retail)}</span></div><div style="color:var(--ok)"><span>Знижка СТО</span><span>−${money(o.retail-o.total)}</span></div><div class="g"><span>Разом</span><span>${money(o.total)}</span></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-y btn-s" target="_blank" rel="noopener" href="invoice.html?o=${o.id}&t=invoice">Рахунок PDF</a><a class="btn btn-l btn-s" target="_blank" rel="noopener" href="invoice.html?o=${o.id}&t=waybill">Накладна PDF</a></div>`;
+ $('#ox').onclick=close;$('#os').onchange=e=>{o.status=e.target.value;save();toast('Статус '+o.id+': '+o.status);draw()};
+ $('#od').classList.add('on');$('#ov').classList.add('on')}
+$('#ov').onclick=close;addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Enter'&&e.target.matches('tr[data-a]'))edit(e.target.dataset.a);if(e.key==='Enter'&&e.target.matches('tr[data-ord]'))order(e.target.dataset.ord)});
+$('#view').addEventListener('click',e=>{const f=e.target.closest('#of button');if(f){ofl=f.dataset.f;draw();return}
+ if(e.target.closest('select'))return;const o=e.target.closest('tr[data-ord]');if(o){order(o.dataset.ord);return}const r=e.target.closest('tr[data-a]');if(r)edit(r.dataset.a)});
 $('#view').addEventListener('change',e=>{const s=e.target.closest('select[data-o]');if(s){const o=db().orders.find(x=>x.id===s.dataset.o);o.status=s.value;save();toast('Статус замовлення '+o.id+': '+s.value)}});
 $('#rs').onclick=()=>{reset();toast('Демо-дані скинуто');draw()};
 draw();
