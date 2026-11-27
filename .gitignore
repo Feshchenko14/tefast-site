@@ -2,3 +2,4 @@
 patch*.py
 index-v*.html
 __pycache__/
+docs/

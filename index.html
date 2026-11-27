@@ -141,6 +141,7 @@
   </div>
   <div class="fb"><span>© 2026 TEFAST. Прототип: ціни та відгуки — приклади.</span><span>Фото: Wikimedia Commons (CC BY-SA, автори dllu, Vauxford та ін.)</span></div>
 </div></footer>
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/live.js"></script>
 <script>
 (()=>{const s=[...document.querySelectorAll('.slide')],b=[...document.querySelectorAll('.bars button')],pp=document.getElementById('pp'),num=document.querySelector('.num');
 let i=0,t,run=!matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -153,5 +154,5 @@ pp.onclick=()=>{run=!run;ic();start()};ic();start();
 const q=document.getElementById('sq');const ht=[...document.querySelectorAll('#ht button')];ht.forEach(x=>x.onclick=()=>{ht.forEach(y=>y.classList.toggle('on',y===x));document.querySelectorAll('#hg .card').forEach(c=>c.hidden=c.dataset.k!==x.dataset.k)});
 document.querySelectorAll('.sbox .tabs button').forEach(x=>x.onclick=()=>{document.querySelectorAll('.sbox .tabs button').forEach(y=>y.classList.toggle('on',y===x));q.placeholder=x.dataset.p;q.focus()});})();
 </script>
-<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script src="assets/app.js"></script>
 </body></html>

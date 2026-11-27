@@ -21,7 +21,7 @@
  <div class="pager" id="pager"></div>
 </section></div></div></main>
 {{FOOTER}}
-<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/live.js"></script><script src="assets/app.js"></script>
 <script>
 (()=>{const $=(s)=>document.querySelector(s),PER=12,enc=encodeURIComponent;
 const q=new URLSearchParams(location.search);

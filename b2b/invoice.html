@@ -11,7 +11,7 @@
 <body style="background:#EDEDF0">
 <div class="sbar"><a class="btn btn-l btn-s" href="orders.html">← До замовлень</a><span id="ttl" style="font-weight:600"></span><div class="sp"><button class="btn btn-y btn-s" id="pr" type="button">Завантажити PDF</button></div></div>
 <article class="sheet" id="sheet" aria-live="polite"></article>
-<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="b2b.js"></script>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="../assets/live.js"></script><script src="b2b.js"></script>
 <script>
 (()=>{const {$,money,fd,db,byId,pad}=B2B,q=new URLSearchParams(location.search),o=db().orders.find(x=>x.id===q.get('o')),wb=q.get('t')==='waybill';
 if(!o){$('#sheet').innerHTML='<div class="empty"><b>Документ не знайдено</b>Перевірте номер замовлення.</div>';return}

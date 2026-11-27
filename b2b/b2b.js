@@ -24,6 +24,7 @@ function seed(){
  const it=(id,q)=>{const p=byId(id);return{id,q,retail:p.price,price:Math.round(p.price*.88)}};
  const mkO=(n,off,items,pay,status)=>{const retail=items.reduce((s,x)=>s+x.retail*x.q,0),total=items.reduce((s,x)=>s+x.price*x.q,0);return{id:'TF-'+n,acc:'a1',date:new Date(now-off*day).toISOString(),items,retail,total,pay,due:pay==='deferral'?new Date(now-off*day+14*day).toISOString():null,delivery:'Нова пошта',comment:'',status}};
  db.orders=[mkO(10421,12,[it('kolodky-halmivni',4),it('rulova-tiaha',6)],'deferral','Виконано'),mkO(10438,3,[it('vazhil-pidviski',2),it('perednii-bamper-model-y',1)],'deferral','Відправлено')];
+ [[44,10381,'kolodky-halmivni',8],[37,10389,'rulova-tiaha',10],[30,10397,'lihtar-zadnii-rh',3],[24,10406,'vazhil-pidviski',4],[19,10412,'adapter-nacs-ccs2',5],[8,10430,'dzerkalo-prave-model-s',3],[1,10441,'kolodky-halmivni',6]].forEach(([off,n,id,q])=>{try{db.orders.push(mkO(n,off,[it(id,q)],'deferral',off<5?'Новий':'Виконано'))}catch(e){}});
  return db;
 }
 let DB=null;
@@ -39,12 +40,12 @@ const logout=()=>wr(K.ses,null);
 function register(d){const D=db();if(D.accounts.some(a=>a.email.toLowerCase()===d.email.toLowerCase()))return{err:'Акаунт із таким email уже існує'};
  const auto=D.settings.verifyMode==='auto'&&/^\d{8}$/.test(d.edrpou);
  const a={id:'a'+(Date.now()%1e7),name:d.name,edrpou:d.edrpou,contact:d.contact,phone:d.phone,email:d.email,pass:d.pass,city:d.city,address:d.address,posts:+d.posts||1,
-  status:auto?'verified':'new',created:new Date().toISOString(),auto,terms:{mode:'percent',value:5,minOrder:3000,deferral:false,deferralDays:0,creditLimit:0,used:0}};
+  status:auto?'verified':'new',created:new Date().toISOString(),auto,terms:Object.assign({mode:'percent',value:5,minOrder:3000,deferral:false,deferralDays:0,creditLimit:0},D.settings.defaults||{},{used:0})};
  D.accounts.push(a);save();wr(K.ses,a.id);return{acc:a}}
 
 /* ---------- ціни ---------- */
 function price(p,acc=me()){const t=acc&&acc.terms;if(!t)return p.price;
- const v=t.mode==='fixed'?p.price-t.value:p.price*(1-t.value/100);return Math.max(1,Math.round(v))}
+ let v=t.mode==='fixed'?p.price-t.value:p.price*(1-t.value/100);const gr=((db().settings||{}).groupRules||{})[p.grp];if(gr)v*=1-gr/100;return Math.max(1,Math.round(v))}
 const discLabel=t=>t.mode==='fixed'?`−${money(t.value)} за одиницю`:`−${t.value}% від роздрібної`;
 function avail(p,mode='delivery'){const s=p.stock,today=s>=6?Math.floor(s*.4):0,tomorrow=s>=3?Math.floor(s*.3):0,later=s-today-tomorrow;
  const lat=days(3);return{today,tomorrow,later,laterDate:pad(lat.getDate())+'.'+pad(lat.getMonth()+1),total:s}}
@@ -93,7 +94,7 @@ function shell({active,title,sub,auth=true}){
   <nav class="nav"><div class="grp">Каталоги</div>${nav('index.html','home','home','Головна')}${nav('catalog.html','catalog','cat','Каталог')}${nav('quick.html','quick','bolt','Швидке замовлення')}
   <div class="grp">Замовлення</div>${nav('cart.html','cart','cart','Кошик','<span class="bd cartc" hidden>0</span>')}${nav('orders.html','orders','list','Мої замовлення')}
   <div class="grp">Акаунт</div>${nav('profile.html','profile','user','Профіль і умови')}</nav>
-  <div class="foot"><a class="mgr" href="../index.html">${ico('site')}Перейти на сайт</a><a class="mgr" href="admin.html">${ico('shield')}Панель менеджера (демо)</a></div></aside>
+  <div class="foot"><a class="mgr" href="../index.html">${ico('site')}Перейти на сайт</a><a class="mgr" href="../admin/index.html">${ico('shield')}Адмін-панель (демо)</a></div></aside>
   <div class="main"><header class="top" id="top"><button class="ic burger" id="burger" aria-label="Меню">${ico('menu')}</button>
    <div class="tt"><h1>${title}</h1>${sub?`<p>${sub}</p>`:''}</div>
    <form class="tsearch" id="gs" role="search">${ico('search')}<label class="sr" for="gsi">Пошук за артикулом</label><input id="gsi" placeholder="Артикул або назва" autocomplete="off"></form>

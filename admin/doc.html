@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Документ — TEFAST Admin</title><link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../b2b/b2b.css">
+<style>
+@page{size:A4;margin:14mm}
+.sheet+.sheet{margin-top:22px}
+.sheet.rc{max-width:380px;font-size:13px}.sheet.rc h1{font-size:16px;text-align:center}.sheet.rc .meta{text-align:center}
+.sheet .cl{margin:10px 0 0;padding-left:20px}.sheet .cl li{margin:6px 0}
+.sheet .bx{display:inline-block;width:14px;height:14px;border:1.5px solid var(--ink);border-radius:3px;vertical-align:-2px}
+.sheet .ln{border-bottom:1px solid var(--ink);height:26px}
+@media print{.sheet+.sheet{break-before:page;margin-top:0}.sheet.rc{max-width:none}}
+</style>
+</head>
+<body style="background:#EDEDF0">
+<div class="sbar"><a class="btn btn-l btn-s" href="index.html#/orders">← До замовлень</a><span id="ttl" style="font-weight:600"></span><div class="sp"><button class="btn btn-y btn-s" id="pr" type="button">Завантажити PDF</button></div></div>
+<div id="docs" aria-live="polite"></div>
+<script src="../assets/tree.js"></script><script src="../assets/data.js"></script><script src="../assets/defaults.js"></script><script src="../assets/live.js"></script><script src="../b2b/b2b.js"></script>
+<script>
+(()=>{const {$,money,fd,pad,db:bdb}=B2B,esc=LIVE.esc,q=new URLSearchParams(location.search),A=LIVE.rd(LIVE.KEY)||{},C=Object.assign({name:'ТОВ «ТЕФАСТ» (приклад)',edrpou:'00000000',iban:'UA00 0000 0000 0000 0000 0000 0000 0',bank:'—',address:'Полтава',tax:'Без ПДВ (приклад)',prefInv:'СФ-',prefWb:'РН-',prefRc:'ТЧ-',signer:'Менеджер'},A.company||{}),S=LIVE.shop();
+const P=id=>PRODUCTS.find(p=>p.id===id)||{name:id,pn:'—',img:''};
+const NAMES={invoice:'Рахунок на оплату',waybill:'Видаткова накладна',receipt:'Товарний чек',pick:'Лист комплектації',return:'Акт повернення',contract:'Договір поставки (B2B)'};
+function find(id){const r=(A.orders||[]).find(o=>o.id===id);if(r)return{ref:'retail',id,date:r.date,items:r.items,total:r.total,retail:r.items.reduce((s,i)=>s+i.q*i.price,0),disc:r.disc||0,fee:r.fee||0,promo:r.promo,
+  buyer:`${esc(r.cust.name)}<br>${esc(r.cust.phone)}<br>${esc(r.cust.city)}, ${esc(r.cust.addr)}`,delivery:({np:'Нова пошта, відділення',co:'Кур\'єр Нової пошти',pk:'Самовивіз зі складу'})[r.delivery],pay:({card:'Карткою онлайн',cod:'Накладений платіж',inv:'Безготівковий розрахунок'})[r.pay],comment:r.comment};
+ const b=bdb(),o=b.orders.find(x=>x.id===id);if(!o)return null;const a=b.accounts.find(x=>x.id===o.acc)||{};
+ return{ref:'b2b',id,date:o.date,items:o.items,total:o.total,retail:o.retail,disc:o.retail-o.total,fee:0,buyer:`${esc(a.name||'—')}<br>ЄДРПОУ ${esc(a.edrpou||'—')}<br>${esc(a.city||'')}${a.address?', '+esc(a.address):''}<br>${esc(a.contact||'')} ${esc(a.phone||'')}`,
+  delivery:o.delivery,pay:o.pay==='deferral'?'Відстрочка до '+fd(o.due):'Передоплата 100%',comment:o.comment}}
+const num=(o,p)=>p+String(o.id).replace(/^\D+-?/,'');
+const rows=(o,price=true)=>o.items.map((i,n)=>{const p=P(i.id);return`<tr><td>${n+1}</td><td class="m">${esc(p.pn)}</td><td>${esc(p.name)}</td><td class="r">${i.q}</td>${price?`<td class="r">${money(i.price)}</td><td class="r">${money(i.price*i.q)}</td>`:''}</tr>`}).join('');
+const head=(o,t,n)=>`<h1>${t} № ${n}</h1><div class="meta">від ${fd(o.date)} · замовлення ${o.id}${o.ref==='b2b'?' · B2B':''}</div>`;
+const parties=o=>`<div class="two"><div><b>Постачальник</b>${esc(C.name)}<br>ЄДРПОУ ${esc(C.edrpou)}<br>${esc(C.address)}<br>IBAN ${esc(C.iban)}<br>${esc(C.bank)}</div><div><b>Покупець</b>${o.buyer}</div></div>`;
+const totals=o=>`<div class="tot"><div><span>Сума товарів</span><span>${money(o.retail)}</span></div>${o.disc?`<div><span>Знижка${o.promo?' (промокод '+esc(o.promo)+')':''}</span><span>−${money(o.disc)}</span></div>`:''}${o.fee?`<div><span>Доставка</span><span>${money(o.fee)}</span></div>`:''}<div class="g"><span>Всього до сплати</span><span>${money(o.total)}</span></div></div>`;
+const T=(o,price=true)=>`<table class="t"><thead><tr><th>№</th><th>Артикул</th><th>Назва</th><th class="r">К-сть</th>${price?'<th class="r">Ціна</th><th class="r">Сума</th>':''}</tr></thead><tbody>${rows(o,price)}</tbody></table>`;
+const R={
+ invoice:o=>`<article class="sheet">${head(o,NAMES.invoice,num(o,C.prefInv))}${parties(o)}${T(o)}${totals(o)}<p style="margin-top:18px;color:var(--mut)">Умови оплати: ${esc(o.pay)}. ${esc(C.tax)}. Реквізити в документі умовні.</p><div class="sign"><span>Виписав: ${esc(C.signer)}</span><span>Підпис покупця</span></div></article>`,
+ waybill:o=>`<article class="sheet">${head(o,NAMES.waybill,num(o,C.prefWb))}${parties(o)}${T(o)}${totals(o)}<p style="margin-top:18px;color:var(--mut)">Доставка: ${esc(o.delivery||'—')}. ${esc(C.tax)}.</p><div class="sign"><span>Відвантажив</span><span>Отримав</span></div></article>`,
+ receipt:o=>`<article class="sheet rc"><h1>${esc(C.name)}</h1><div class="meta">Товарний чек № ${num(o,C.prefRc)}<br>${fd(o.date,1)}</div><table class="t"><tbody>${o.items.map(i=>{const p=P(i.id);return`<tr><td>${esc(p.name)}<br><small class="mu">${i.q} × ${money(i.price)}</small></td><td class="r nw">${money(i.price*i.q)}</td></tr>`}).join('')}</tbody></table>${totals(o)}<p style="text-align:center;color:var(--mut)">Оплата: ${esc(o.pay)}<br>Дякуємо за покупку!<br>${esc(S.phone)}</p></article>`,
+ pick:o=>`<article class="sheet">${head(o,NAMES.pick,o.id)}<div class="two"><div><b>Клієнт</b>${o.buyer}</div><div><b>Відправлення</b>${esc(o.delivery||'—')}<br>Оплата: ${esc(o.pay)}${o.comment?'<br>Коментар: '+esc(o.comment):''}</div></div><table class="t"><thead><tr><th>№</th><th>Артикул</th><th>Назва</th><th class="r">К-сть</th><th>Зібрано</th></tr></thead><tbody>${o.items.map((i,n)=>{const p=P(i.id);return`<tr><td>${n+1}</td><td class="m">${esc(p.pn)}</td><td>${esc(p.name)}</td><td class="r"><b>${i.q}</b></td><td><span class="bx"></span></td></tr>`}).join('')}</tbody></table><div class="sign"><span>Зібрав (ПІБ, підпис)</span><span>Перевірив</span></div></article>`,
+ return:o=>`<article class="sheet">${head(o,NAMES.return,'ПОВ-'+String(o.id).replace(/^\D+-?/,''))}${parties(o)}<table class="t"><thead><tr><th>№</th><th>Артикул</th><th>Назва</th><th class="r">Куплено</th><th class="r">Повертається</th></tr></thead><tbody>${o.items.map((i,n)=>{const p=P(i.id);return`<tr><td>${n+1}</td><td class="m">${esc(p.pn)}</td><td>${esc(p.name)}</td><td class="r">${i.q}</td><td class="r">____</td></tr>`}).join('')}</tbody></table><p style="margin-top:16px"><b>Причина повернення:</b></p><div class="ln"></div><div class="ln"></div><p style="margin-top:14px">Сума до повернення: ______ ₴ · Спосіб: на картку / готівкою / залік у наступне замовлення</p><div class="sign"><span>Покупець</span><span>Представник ${esc(C.name)}</span></div></article>`};
+function contract(a){const t=a.terms,n='Д-'+a.edrpou+'/'+new Date(a.created).getFullYear();
+ return`<article class="sheet"><h1>Договір поставки № ${n}</h1><div class="meta">${fd(new Date())} · Полтава (приклад, не є юридичним документом)</div>
+ <div class="two"><div><b>Постачальник</b>${esc(C.name)}<br>ЄДРПОУ ${esc(C.edrpou)}<br>${esc(C.address)}</div><div><b>Покупець (СТО)</b>${esc(a.name)}<br>ЄДРПОУ ${esc(a.edrpou)}<br>${esc(a.contact)}, ${esc(a.phone)}</div></div>
+ <ol class="cl"><li>Постачальник передає Покупцю автозапчастини за каталогом TEFAST, Покупець приймає й оплачує їх на умовах цього договору.</li>
+ <li>Ціни: ${t.mode==='fixed'?'роздрібна ціна мінус '+money(t.value)+' за одиницю':'роздрібна ціна зі знижкою '+t.value+'%'}${t.groupNote||''}.</li>
+ <li>Мінімальна сума одного замовлення: ${money(t.minOrder)}.</li>
+ <li>Оплата: ${t.deferral?'відстрочка платежу до '+t.deferralDays+' днів, кредитний ліміт '+money(t.creditLimit)+'. Перевищення ліміту або прострочення призводить до призупинення відвантажень':'передоплата 100% за рахунком'}.</li>
+ <li>Гарантія: на нові деталі за умовами виробника, на Б/В деталі — за окремою домовленістю в рахунку.</li>
+ <li>Договір діє 12 місяців і автоматично продовжується, якщо жодна зі сторін не заявила про припинення.</li></ol>
+ <div class="sign"><span>Постачальник: ${esc(C.signer)}</span><span>Покупець: ${esc(a.contact)}</span></div></article>`}
+const type=q.get('t')||'invoice',ids=(q.get('o')||'').split(',').filter(Boolean);let html='',title='';
+if(q.get('a')){const a=bdb().accounts.find(x=>x.id===q.get('a'));html=a?contract(a):'';title=NAMES.contract}
+else{const list=ids.map(find).filter(Boolean),types=type==='all'?['invoice','waybill','receipt','pick']:type.split(',').filter(t=>R[t]);
+ html=list.map(o=>types.map(t=>R[t](o)).join('')).join('');title=types.map(t=>NAMES[t]).join(' + ')+(list.length>1?' ('+list.length+' зам.)':list[0]?' · '+list[0].id:'')}
+$('#docs').innerHTML=html||'<article class="sheet"><div class="empty"><b>Документ не знайдено</b>Перевірте номер замовлення.</div></article>';
+$('#ttl').textContent=title;document.title=title||'Документ';$('#pr').onclick=()=>print();if(q.get('print')==='1')setTimeout(()=>print(),400);
+})();
+</script>
+</body></html>

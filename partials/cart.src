@@ -3,10 +3,12 @@
 {{SPRITE}}{{HEADER}}
 <main id="main"><div class="wrap" id="root"></div></main>
 {{FOOTER}}
-<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script>
+<script src="assets/tree.js"></script><script src="assets/data.js"></script><script src="assets/live.js"></script><script src="assets/app.js"></script>
 <script>
-(()=>{const $=s=>document.querySelector(s),root=$('#root'),FREE=3000;let np=true;
-const del=()=>cart.total()>=FREE?0:150;
+(()=>{const $=s=>document.querySelector(s),root=$('#root'),FREE=LIVE.shop().freeFrom;let np=true;
+const SH=LIVE.shop(),del=()=>cart.total()>=FREE?0:SH.np;let promo=null;const disc=()=>promo?(LIVE.promo(promo,cart.total()).discount||0):0;
+const feeNow=()=>{const d=(document.querySelector('[name=d]:checked')||{}).value;return d==='co'?SH.courier:d==='np'?del():0};
+const upd=()=>{const dc=disc(),pd=$('#pd');$('#tt').textContent=money(cart.total()-dc+feeNow());pd.style.display=dc?'':'none';pd.innerHTML=dc?`<span>Знижка за промокодом</span><b style="color:#1b7f2c">−${money(dc)}</b>`:''};
 function empty(){root.innerHTML=`<nav class="crumbs"><a href="index.html">Головна</a><i>/</i><span aria-current="page">Кошик</span></nav><div class="cempty"><h2>Кошик порожній</h2><p>Додайте деталі з каталогу, і вони з'являться тут.</p><a class="btn btn-y" href="catalog.html">До каталогу<svg class="i"><use href="#arrow"/></svg></a></div>`}
 function draw(){const c=cart.get();if(!c.length){empty();return}
  const t=cart.total(),left=Math.max(0,FREE-t),pc=Math.min(100,t/FREE*100);
@@ -16,7 +18,7 @@ function draw(){const c=cart.get();if(!c.length){empty();return}
   <div class="items">${c.map((x,ix)=>{const p=byId(x.id);return `<div class="it" style="--i:${ix}"><a href="product.html?id=${p.id}"><img src="${p.img}" alt="${p.name}"></a><div><span class="pn">${p.pn} · ${p.type}</span><h3><a href="product.html?id=${p.id}">${p.name}</a></h3><div class="meta"><div class="qty"><button type="button" data-a="-" data-id="${p.id}" aria-label="Менше"><svg class="i"><use href="#minus"/></svg></button><input value="${x.q}" readonly aria-label="Кількість"><button type="button" data-a="+" data-id="${p.id}" aria-label="Більше"><svg class="i"><use href="#plus"/></svg></button></div><button class="rm" type="button" data-a="x" data-id="${p.id}"><svg class="i"><use href="#trash"/></svg>Видалити</button></div></div><div class="sum">${money(p.price*x.q)}</div></div>`}).join('')}</div>
   <form class="form2" id="of" novalidate><h2>Оформлення замовлення</h2>
    <fieldset><legend>Контакти</legend><div class="g2"><label class="fl">Ім'я<input name="n" required autocomplete="name"></label><label class="fl">Телефон<input name="t" type="tel" required autocomplete="tel" placeholder="+380"></label></div></fieldset>
-   <fieldset><legend>Доставка</legend><div class="rc"><label><input type="radio" name="d" value="np" checked>Нова пошта, відділення<small>1–2 дні</small><b>${del()?money(del()):'Безкоштовно'}</b></label><label><input type="radio" name="d" value="co">Кур'єр Нової пошти<small>1–2 дні</small><b>${money(200)}</b></label><label><input type="radio" name="d" value="pk">Самовивіз зі складу, Полтава<small>Сьогодні, після підтвердження</small><b>Безкоштовно</b></label></div>
+   <fieldset><legend>Доставка</legend><div class="rc"><label><input type="radio" name="d" value="np" checked>Нова пошта, відділення<small>1–2 дні</small><b>${del()?money(del()):'Безкоштовно'}</b></label><label><input type="radio" name="d" value="co">Кур'єр Нової пошти<small>1–2 дні</small><b>${money(SH.courier)}</b></label><label><input type="radio" name="d" value="pk">Самовивіз зі складу, Полтава<small>Сьогодні, після підтвердження</small><b>Безкоштовно</b></label></div>
    <div class="g2" style="margin-top:12px"><label class="fl">Місто<input name="c" required autocomplete="address-level2"></label><label class="fl">Відділення або адреса<input name="a" required></label></div></fieldset>
    <fieldset><legend>Оплата</legend><div class="rc"><label><input type="radio" name="p" value="card" checked>Карткою онлайн</label><label><input type="radio" name="p" value="cod">Накладений платіж</label><label><input type="radio" name="p" value="inv">Рахунок для юрособи (B2B)</label></div></fieldset>
    <label class="fl" style="margin-top:22px">Коментар (VIN, побажання)<input name="m" placeholder="Необов'язково"></label>
@@ -24,13 +26,15 @@ function draw(){const c=cart.get();if(!c.length){empty();return}
   <aside class="summ" aria-label="Підсумок"><h2>Ваше замовлення</h2>
    <div class="row"><span>Товари (${cart.count()})</span><b>${money(t)}</b></div><div class="row"><span>Доставка</span><b id="dl">${del()?money(del()):'Безкоштовно'}</b></div>
    <div class="free">${left?`До безкоштовної доставки: <b>${money(left)}</b>`:'<b>Безкоштовна доставка діє</b>'}<div class="bar"><i style="width:${pc}%"></i></div></div>
-   <div class="row tot"><span>До сплати</span><b id="tt">${money(t+del())}</b></div>
+   <form id="pf" style="display:flex;gap:8px;margin:14px 0 4px"><input id="pc" placeholder="Промокод" value="${promo||''}" aria-label="Промокод" style="flex:1;min-width:0;height:44px;border:1.5px solid var(--si);border-radius:12px;padding:0 14px;font:inherit;text-transform:uppercase"><button class="btn btn-l" type="submit">Застосувати</button></form><div class="row" id="pd" style="display:none"></div><div class="row tot"><span>До сплати</span><b id="tt">${money(t-disc()+del())}</b></div>
    <button class="btn btn-y" form="of" type="submit" style="width:100%;margin-top:20px">Підтвердити замовлення<svg class="i"><use href="#arrow"/></svg></button>
    <p style="color:var(--si);font-size:13px;margin-top:14px">Натискаючи кнопку, ви погоджуєтесь з умовами доставки й повернення. Це макет, замовлення нікуди не надсилається.</p></aside></div>`;
  const f=$('#of');
- f.addEventListener('change',e=>{if(e.target.name==='d'){const d=e.target.value,fee=d==='co'?200:d==='np'?del():0;$('#dl').textContent=fee?money(fee):'Безкоштовно';$('#tt').textContent=money(cart.total()+fee)}});
+ f.addEventListener('change',e=>{if(e.target.name==='d'){const fee=feeNow();$('#dl').textContent=fee?money(fee):'Безкоштовно';upd()}});
+ $('#pf').onsubmit=e=>{e.preventDefault();const r=LIVE.promo($('#pc').value,cart.total());if(r.ok){promo=r.promo.code;toast('Промокод застосовано: −'+money(r.discount))}else{promo=null;toast(r.err)}upd()};upd();
  f.onsubmit=e=>{e.preventDefault();let ok=true;f.querySelectorAll('[required]').forEach(i=>{const bad=!i.value.trim();i.style.borderColor=bad?'#b3261e':'';if(bad&&ok){i.focus();ok=false}});if(!ok){toast('Заповніть обов\'язкові поля');return}
-  const n=Math.floor(100000+Math.random()*900000);cart.clear();
+  const dv=f.elements.d.value,fee=feeNow(),sub=cart.total(),dc=disc(),ids=((LIVE.db()||{}).orders||[]).map(x=>+String(x.id).slice(2)||0),pend=(LIVE.rd(LIVE.NEW)||[]).length,n=Math.max(24100,...ids)+1+pend;
+  LIVE.addOrder({id:'R-'+n,date:new Date().toISOString(),src:'site',cust:{name:f.elements.n.value.trim(),phone:f.elements.t.value.trim(),email:'',city:f.elements.c.value.trim(),addr:f.elements.a.value.trim()},items:cart.get().map(x=>({id:x.id,q:x.q,price:byId(x.id).price})),delivery:dv,fee,pay:f.elements.p.value,promo:dc?promo:'',disc:dc,total:sub-dc+fee,comment:f.elements.m.value.trim(),status:'Новий'});cart.clear();
   root.innerHTML=`<div class="done"><div class="ok"><svg class="i"><use href="#check"/></svg></div><h1>Замовлення №${n} прийнято</h1><p>Менеджер зателефонує протягом години, щоб підтвердити деталі та сумісність за VIN.</p><a class="btn btn-y" href="index.html">На головну<svg class="i"><use href="#arrow"/></svg></a></div>`;window.scrollTo(0,0)}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const id=b.dataset.id,x=cart.get().find(i=>i.id===id);if(!x)return;
  const nq=b.dataset.a==='x'?0:x.q+(b.dataset.a==='+'?1:-1);const row=b.closest('.it');if(nq<=0&&row&&!matchMedia('(prefers-reduced-motion:reduce)').matches){row.classList.add('out');setTimeout(()=>{cart.set(id,0);draw()},170)}else{cart.set(id,nq);draw()}});
